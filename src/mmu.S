@@ -6,13 +6,17 @@
  * \author Scott K Logan
  ******************************************************************************/
 .data
+mem:    .space 65536
 bios:   .byte 0xC3, 0xED, 0x00
         .space 234
         .byte 0x31, 0xFE, 0xFF, 0x21, 0x4D, 0x01, 0x11, 0xD8
         .byte 0x00, 0x01, 0xB0, 0x01, 0xC5, 0xF1, 0x01, 0x13
         .byte 0x00, 0xE0, 0x50
-mem:    .byte 0x06, 0x88, 0x0E, 0x88, 0x78, 0x81, 0xFD, 0x00
-        .space 65536
+
+z80hdr: .byte 0x5a, 0x38, 0x30, 0x41, 0x53, 0x4d, 0x1a, 0x0a
+        .byte 0x00, 0x00, 0x00, 0x00
+filhdr: .space 10
+        .byte 0x00, 0x00
 
 .equ rom0, (mem)
 .equ rom1, (mem + 16384)
@@ -24,6 +28,63 @@ mem:    .byte 0x06, 0x88, 0x0E, 0x88, 0x78, 0x81, 0xFD, 0x00
 
 .global mmu_init
 mmu_init:
+        mov pc, lr
+
+.global mmu_load
+mmu_load:
+        /* Open the file */
+        mov r1, $0
+        mov r2, $0
+        mov r7, $5
+        swi $0
+        cmp r0, $0
+        movlt pc, lr
+
+        /* Read the header */
+        mov r8, r0
+        mov r7, $3
+        ldr r1, =filhdr
+        mov r2, $10
+        swi $0
+        cmp r0, $0
+        blt mmu_load_close
+        cmp r0, $10
+        bne mmu_load_bad_hdr
+
+        /* Verify the header */
+        ldr r0, =z80hdr
+        ldr r1, =filhdr
+        ldr r2, [r0]
+        ldr r3, [r1]
+        cmp r2, r3
+        bne mmu_load_bad_hdr
+        ldr r2, [r0, $4]
+        ldr r3, [r1, $4]
+        cmp r2, r3
+        bne mmu_load_bad_hdr
+        ldr r2, [r0, $8]
+        ldr r3, [r1, $8]
+        cmp r2, r3
+        bne mmu_load_bad_hdr
+
+        /* Read the program */
+        mov r0, r8
+        ldr r1, =mem
+        mov r2, $65536
+        mov r7, $3
+        swi $0
+
+        cmp r0, $0
+        movgt r0, $0
+        b mmu_load_close
+
+mmu_load_bad_hdr:
+        movne r0, $22
+
+mmu_load_close:
+        /* Close the file */
+        mov r7, $6
+        swi $0
         mov pc, lr
 
 .global mmu_ri
