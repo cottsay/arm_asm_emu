@@ -31,6 +31,11 @@
  * | sp         | r13 (sp)   |
  * |            | r14 (lr)   |
  *
+ * Since the individual opcode implementations use an absolute branch to return
+ * to the CPU step routine, they sometimes use the ARM link register as a
+ * scratch register. Many of them also invoke MMU routines, which writes to the
+ * link register anyway.
+ *
  * The zil (r12) reg is used to noop while instructions are "being executed" -
  * this ensures that the programs are run at the same rate as they were on the
  * Z80. Maybe we could decrease the clock by decresing this by a multiple...
@@ -132,20 +137,9 @@ cpu_dispatch:
         ldmea r1, {r2-r14}
 
         /* Z80 SYSTEM READY */
+        /* AT THIS POINT, THE ONLY PATH BACK TO LR */
+        /* IS THE SPECIAL 0xFD INSTRUCTION, opRET */
 
-        bl cpu_step
-
-        /* MOVING BACK TO SYS */
-        /* NOTE: LR GOT HOSED, SO THIS ISN'T POSSIBLE */
-
-        ldr r1, =Z80RS
-        stmea r1, {r2-r14}
-
-        ldr r0, =SYSRS_E
-        ldmea r0, {r4-r13, pc}
-
-        .global cpu_step
-        .global mmu_ri_r
 cpu_step:
         subs zil, $1
         bpl cpu_step
@@ -2894,8 +2888,15 @@ opEI:    @0xFB
 
 opRET:   @0xFD
         mov r0, zra
-        mov r7, $1
-        swi $0
+        add zpc, $1
+
+        /* MOVING BACK TO SYS */
+
+        ldr r1, =Z80RS
+        stmea r1, {r2-r14}
+
+        ldr r0, =SYSRS_E
+        ldmea r0, {r4-r13, pc}
 
 opCAn:   @0xFE
         bl mmu_ri1

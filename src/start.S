@@ -1,3 +1,11 @@
+/******************************************************************************
+ * \file start.S
+ *
+ * \brief Emulator initialization and startup
+ *
+ * \author Scott K Logan
+ ******************************************************************************/
+
         .text
 
         .global _start
@@ -15,7 +23,6 @@ _start_no_load:
         bl cpu_init
         bl mmu_init
         bl cpu_dispatch
-        mov r0, $0
 _start_exit:
         mov r7, $1
         swi $0
