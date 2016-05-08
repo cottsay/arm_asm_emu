@@ -70,14 +70,14 @@ Z80RS_E:
 SYSRS:  .space 44
 SYSRS_E:
                   @0/8     @1/9     @2/A    @3/B    @4/C    @5/D    @6/E    @7/F
-ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn,   opNI  @0
-        .word opLDnnSP, opAHLBC, opLDABC,  opDBC,   opIC,   opDC, opLDCn,   opNI
-        .word     opNI,opLDDEnn, opLDDEA,  opIDE,   opID,   opDD, opLDDn,   opNI  @1
-        .word     opNI, opAHLDE, opLDADE,  opDDE,   opIE,   opDE, opLDEn,   opNI
-        .word     opNI,opLDHLnn,opLDHLiA,  opIHL,   opIH,   opDH, opLDHn,  opDAA  @2
-        .word     opNI, opAHLHL,opLDAHLi,  opDHL,   opIL,   opDL, opLDLn,  opCPL
-        .word     opNI,opLDSPnn,opLDHLdA,  opISP, opIHLm, opDHLm,opLDHLn,  opSCF  @3
-        .word     opNI, opAHLSP,opLDAHLd,  opDSP,   opIA,   opDA, opLDAn,  opCCF
+ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA  @0
+        .word opLDnnSP, opAHLBC, opLDABC,  opDBC,   opIC,   opDC, opLDCn, opRRCA
+        .word   opSTOP,opLDDEnn, opLDDEA,  opIDE,   opID,   opDD, opLDDn,  opRLA  @1
+        .word    opJRn, opAHLDE, opLDADE,  opDDE,   opIE,   opDE, opLDEn,  opRRA
+        .word  opJRNZn,opLDHLnn,opLDHLiA,  opIHL,   opIH,   opDH, opLDHn,  opDAA  @2
+        .word   opJRZn, opAHLHL,opLDAHLi,  opDHL,   opIL,   opDL, opLDLn,  opCPL
+        .word  opJRNCn,opLDSPnn,opLDHLdA,  opISP, opIHLm, opDHLm,opLDHLn,  opSCF  @3
+        .word   opJRCn, opAHLSP,opLDAHLd,  opDSP,   opIA,   opDA, opLDAn,  opCCF
         .word   opLDBB,  opLDBC,  opLDBD, opLDBE, opLDBH, opLDBL,opLDBHL, opLDBA  @4
         .word   opLDCB,  opLDCC,  opLDCD, opLDCE, opLDCH, opLDCL,opLDCHL, opLDCA
         .word   opLDDB,  opLDDC,  opLDDD, opLDDE, opLDDH, opLDDL,opLDDHL, opLDDA  @5
@@ -94,14 +94,14 @@ ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn,   opNI
         .word   opXOAB,  opXOAC,  opXOAD, opXOAE, opXOAH, opXOAL,opXOAHL, opXOAA
         .word   opORAB,  opORAC,  opORAD, opORAE, opORAH, opORAL,opORAHL, opORAA  @B
         .word    opCAB,   opCAC,   opCAD,  opCAE,  opCAH,  opCAL, opCAHL,  opCAA
-        .word     opNI, opPOPBC,    opNI,   opNI,   opNI,opPUSBC,  opAAn,   opNI  @C
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI, opAcAn,   opNI
-        .word     opNI, opPOPDE,    opNI,   opNI,   opNI,opPUSDE,  opSAn,   opNI  @D
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI, opScAn,   opNI
-        .word  opLDFnA, opPOPHL, opLDFCA,   opNI,   opNI,opPUSHL, opANAn,   opNI  @E
-        .word   opASPn,    opNI, opLDnnA,   opNI,   opNI,   opNI, opXOAn,   opNI
-        .word  opLDAFn, opPOPAF, opLDAFC,   opDI,   opNI,opPUSAF, opORAn,   opNI  @F
-        .word opLDHLSn, opLDSHL, opLDAnn,   opEI,   opNI,  opRET,  opCAn,   opNI
+        .word  opRETNZ, opPOPBC,opJPNZnn, opJPnn,opCNZnn,opPUSBC,  opAAn, opR00H  @C
+        .word   opRETZ,   opRET, opJPZnn,   opNI, opCZnn,  opCnn, opAcAn, opR08H
+        .word  opRETNC, opPOPDE,opJPNCnn,   opNI,opCNCnn,opPUSDE,  opSAn, opR10H  @D
+        .word   opRETC,  opRETI, opJPCnn,   opNI, opCCnn,   opNI, opScAn, opR18H
+        .word  opLDFnA, opPOPHL, opLDFCA,   opNI,   opNI,opPUSHL, opANAn, opR20H  @E
+        .word   opASPn,  opJPHL, opLDnnA,   opNI,   opNI,   opNI, opXOAn, opR28H
+        .word  opLDAFn, opPOPAF, opLDAFC,   opDI,   opNI,opPUSAF, opORAn, opR30H  @F
+        .word opLDHLSn, opLDSHL, opLDAnn,   opEI,   opNI, opEXIT,  opCAn, opR38H
 
         .text
         .global cpu_init
@@ -138,7 +138,7 @@ cpu_dispatch:
 
         /* Z80 SYSTEM READY */
         /* AT THIS POINT, THE ONLY PATH BACK TO LR */
-        /* IS THE SPECIAL 0xFD INSTRUCTION, opRET */
+        /* IS THE SPECIAL 0xFD INSTRUCTION, opEXIT */
 
 cpu_step:
         subs zil, $1
@@ -258,6 +258,21 @@ opLDBn:  @0x06
         add zpc, $2
         b cpu_inst_r
 
+opRLCA:  @0x07
+        eor zrf, zrf            @ reset all flags
+
+        lsl zra, $1
+        tst zra, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zra, $0x01                @ set bit 0
+
+        ands zra, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        mov zil, $4
+        add zpc, $1
+        b cpu_inst_r
+
 opLDnnSP:@0x08
         bl mmu_rih1
         orr r0, sp, r1, lsl $0x10
@@ -363,6 +378,27 @@ opLDCn:  @0x0E
         add zpc, $2
         b cpu_inst_r
 
+opRRCA:  @0x0F
+        eor zrf, zrf            @ reset all flags
+
+        tst zra, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zra, $0x100               @ set bit 8
+
+        lsrs zra, $1
+        orreq zrf, $flZ         @ set zero
+
+        mov zil, $4
+        add zpc, $1
+        b cpu_inst_r
+
+opSTOP:  @0x10
+        @ TODO: Wait for button press
+
+        mov zil, $4
+        add zpc, $1
+        b cpu_inst_r
+
 opLDDEnn:@0x11
         bl mmu_rih1
         and zre, r1, $0xFF
@@ -438,6 +474,32 @@ opLDDn:  @0x16
         bl mmu_ri1
 
         mov zrd, r1
+        mov zil, $8
+        add zpc, $2
+        b cpu_inst_r
+
+opRLA:   @0x17
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl zra, $1
+        orrne zra, $0x01
+
+        tst zra, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zra, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        mov zil, $4
+        add zpc, $1
+        b cpu_inst_r
+
+opJRn:   @0x18
+        bl mmu_ri1
+        sxtab zpc, zpc, r1
+
         mov zil, $8
         add zpc, $2
         b cpu_inst_r
@@ -536,6 +598,34 @@ opLDEn:  @0x1E
         mov zre, r1
         mov zil, $8
         add zpc, $2
+        b cpu_inst_r
+
+opRRA :  @0x1F
+        tst zrf, $flC           @ if carry
+        orrne zra, $0x100               @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst zra, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zra, $1
+        orreq zrf, $flZ         @ set zero
+
+        mov zil, $4
+        add zpc, $1
+        b cpu_inst_r
+
+opJRNZn: @0x20
+        mov zil, $8
+        add zpc, $2
+
+        tst zrf, $flZ
+        bne cpu_inst_r
+
+        bl mmu_ri1
+        sxtab zpc, zpc, r1
+
         b cpu_inst_r
 
 opLDHLnn:@0x21
@@ -661,6 +751,18 @@ opDAA_end:
         add zpc, $1
         b cpu_inst_r
 
+opJRZn:  @0x28
+        mov zil, $8
+        add zpc, $2
+
+        tst zrf, $flZ
+        beq cpu_inst_r
+
+        bl mmu_ri1
+        sxtab zpc, zpc, r1
+
+        b cpu_inst_r
+
 opAHLHL: @0x29
         bic zrf, $flN           @ reset subtract
 
@@ -770,6 +872,18 @@ opCPL:   @0x2F
         add zpc, $1
         b cpu_inst_r
 
+opJRNCn: @0x30
+        mov zil, $8
+        add zpc, $2
+
+        tst zrf, $flC
+        bne cpu_inst_r
+
+        bl mmu_ri1
+        sxtab zpc, zpc, r1
+
+        b cpu_inst_r
+
 opLDSPnn:@0x31
         bl mmu_rih1
         mov zsp, r1
@@ -859,7 +973,7 @@ opLDHLn: @0x36
         bl mmu_wb
 
         mov zil, $12
-        add zpc, $1
+        add zpc, $2
         b cpu_inst_r
 
 opSCF:   @0x37
@@ -869,6 +983,18 @@ opSCF:   @0x37
 
         mov zil, $4
         add zpc, $1
+        b cpu_inst_r
+
+opJRCn: @0x38
+        mov zil, $8
+        add zpc, $2
+
+        tst zrf, $flC
+        beq cpu_inst_r
+
+        bl mmu_ri1
+        sxtab zpc, zpc, r1
+
         b cpu_inst_r
 
 opAHLSP: @0x39
@@ -943,7 +1069,7 @@ opIA:    @0x3C
 opDA:    @0x3D
         orr zrf, $flN           @ set subtract
 
-        add r0, zra, $0xFF     @ subtract 1
+        add r0, zra, $0xFF      @ subtract 1
 
         eor r1, zra, $0xFF
         eor r1, r1, r0          @ XOR all three
@@ -2537,15 +2663,72 @@ opCAA:   @0xBF
         add zpc, $1
         b cpu_inst_r
 
+opRETNZ: @0xC0
+        mov zil, $8
+
+        tst zrf, $flZ
+        addne zpc, $1
+        bne cpu_inst_r
+
+        mov r0, zsp
+        bl mmu_rh
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+
+        mov zpc, r1
+
+        b cpu_inst_r
+
 opPOPBC: @0xC1
         mov r0, zsp
         add zsp, $2
         bl mmu_rh
-        and zrc, r1, $0xFF
-        lsr zrb, r1, $0x08
+        and zrb, r1, $0xFF
+        lsr zrc, r1, $0x08
 
         mov zil, $12
         add zpc, $1
+        b cpu_inst_r
+
+opJPNZnn:@0xC2
+        mov zil, $12
+
+        tst zrf, $flZ
+        addne zpc, $3
+        bne cpu_inst_r
+
+        bl mmu_rih1
+        mov zpc, r1
+        b cpu_inst_r
+
+opJPnn:  @0xC3
+        bl mmu_rih1
+        mov zpc, r1
+
+        mov zil, $12
+        b cpu_inst_r
+
+opCNZnn: @0xC4
+        mov zil, $12
+        add zpc, $3
+
+        tst zrf, $flZ
+        bne cpu_inst_r
+
+        bl mmu_rih1
+
+        bic r0, zpc, $0x00FF0000
+        bic r0, $0xFF000000
+        mov zpc, r1
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
         b cpu_inst_r
 
 opPUSBC: @0xC5
@@ -2581,6 +2764,101 @@ opAAn:   @0xC6
         add zpc, $2
         b cpu_inst_r
 
+opR00H:  @0xC7
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $32
+        mov zpc, $0x00
+        b cpu_inst_r
+
+opRETZ:  @0xC8
+        mov zil, $8
+
+        tst zrf, $flZ
+        addeq zpc, $1
+        beq cpu_inst_r
+
+        mov r0, zsp
+        bl mmu_rh
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+
+        mov zpc, r1
+
+        b cpu_inst_r
+
+opRET:   @0xC9
+        mov r0, zsp
+        bl mmu_rh
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+
+        mov zpc, r1
+
+        mov zil, $8
+        b cpu_inst_r
+
+opJPZnn: @0xCA
+        mov zil, $12
+
+        tst zrf, $flZ
+        addeq zpc, $3
+        beq cpu_inst_r
+
+        bl mmu_rih1
+        mov zpc, r1
+        b cpu_inst_r
+
+opCZnn:  @0xCC
+        mov zil, $12
+        add zpc, $3
+
+        tst zrf, $flZ
+        beq cpu_inst_r
+
+        bl mmu_rih1
+
+        bic r0, zpc, $0x00FF0000
+        bic r0, $0xFF000000
+        mov zpc, r1
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        b cpu_inst_r
+
+opCnn:   @0xCD
+        bl mmu_rih1
+
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+        mov zpc, r1
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $12
+        b cpu_inst_r
+
 opAcAn:  @0xCE
         bl mmu_ri1
 
@@ -2608,15 +2886,80 @@ opAcAn:  @0xCE
         add zpc, $2
         b cpu_inst_r
 
+opR08H:  @0xCF
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $32
+        mov zpc, $0x08
+        b cpu_inst_r
+
+opRETNC: @0xD0
+        mov zil, $8
+
+        tst zrf, $flC
+        addne zpc, $1
+        bne cpu_inst_r
+
+        mov r0, zsp
+        bl mmu_rh
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+
+        mov zpc, r1
+
+        b cpu_inst_r
+
 opPOPDE: @0xD1
         mov r0, zsp
         add zsp, $2
         bl mmu_rh
-        and zre, r1, $0xFF
-        lsr zrd, r1, $0x08
+        and zrd, r1, $0xFF
+        lsr zre, r1, $0x08
 
         mov zil, $12
         add zpc, $1
+        b cpu_inst_r
+
+opJPNCnn:@0xD2
+        mov zil, $12
+
+        tst zrf, $flC
+        addne zpc, $3
+        bne cpu_inst_r
+
+        bl mmu_rih1
+        mov zpc, r1
+        b cpu_inst_r
+
+opCNCnn: @0xD4
+        mov zil, $12
+        add zpc, $3
+
+        tst zrf, $flC
+        bne cpu_inst_r
+
+        bl mmu_rih1
+
+        bic r0, zpc, $0x00FF0000
+        bic r0, $0xFF000000
+        mov zpc, r1
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
         b cpu_inst_r
 
 opPUSDE: @0xD5
@@ -2654,6 +2997,86 @@ opSAn:   @0xD6
         add zpc, $2
         b cpu_inst_r
 
+opR10H:  @0xD7
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $32
+        mov zpc, $0x10
+        b cpu_inst_r
+
+opRETC:  @0xD8
+        mov zil, $8
+
+        tst zrf, $flC
+        addeq zpc, $1
+        beq cpu_inst_r
+
+        mov r0, zsp
+        bl mmu_rh
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+
+        mov zpc, r1
+
+        b cpu_inst_r
+
+opRETI:  @0xD9
+        @ TODO: Enable interrupts
+
+        mov r0, zsp
+        bl mmu_rh
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+
+        mov zpc, r1
+
+        mov zil, $8
+        b cpu_inst_r
+
+opJPCnn: @0xDA
+        mov zil, $12
+
+        tst zrf, $flC
+        addeq zpc, $3
+        beq cpu_inst_r
+
+        bl mmu_rih1
+        mov zpc, r1
+        b cpu_inst_r
+
+opCCnn:  @0xDC
+        mov zil, $12
+        add zpc, $3
+
+        tst zrf, $flC
+        beq cpu_inst_r
+
+        bl mmu_rih1
+
+        bic r0, zpc, $0x00FF0000
+        bic r0, $0xFF000000
+        mov zpc, r1
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        b cpu_inst_r
+
 opScAn:  @0xDE
         bl mmu_ri1
 
@@ -2680,6 +3103,21 @@ opScAn:  @0xDE
         add zpc, $2
         b cpu_inst_r
 
+opR18H:  @0xDF
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $32
+        mov zpc, $0x18
+        b cpu_inst_r
+
 opLDFnA: @0xE0
         bl mmu_ri1
         orr r1, $0xFF00
@@ -2694,8 +3132,8 @@ opPOPHL: @0xE1
         mov r0, zsp
         add zsp, $2
         bl mmu_rh
-        and zrl, r1, $0xFF
-        lsr zrh, r1, $0x08
+        and zrh, r1, $0xFF
+        lsr zrl, r1, $0x08
 
         mov zil, $12
         add zpc, $1
@@ -2732,6 +3170,21 @@ opANAn:  @0xE6
         add zpc, $2
         b cpu_inst_r
 
+opR20H:  @0xE7
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $32
+        mov zpc, $0x20
+        b cpu_inst_r
+
 opASPn:  @0xE8
         bl mmu_ri1
 
@@ -2755,6 +3208,12 @@ opASPn:  @0xE8
         add zpc, $2
         b cpu_inst_r
 
+opJPHL:  @0xE9
+        orr zpc, zrl, zrh, lsl $0x08
+
+        mov zil, $4
+        b cpu_inst_r
+
 opLDnnA: @0xEA
         bl mmu_rih1
         orr r0, zra, r1, lsl $0x10
@@ -2776,6 +3235,21 @@ opXOAn:  @0xEE
         add zpc, $2
         b cpu_inst_r
 
+opR28H:  @0xEF
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $32
+        mov zpc, $0x28
+        b cpu_inst_r
+
 opLDAFn: @0xF0
         bl mmu_ri1
         orr r0, r1, $0xFF00
@@ -2790,8 +3264,8 @@ opPOPAF: @0xF1
         mov r0, zsp
         add zsp, $2
         bl mmu_rh
-        and zrf, r1, $0xFF
-        lsr zra, r1, $0x08
+        and zra, r1, $0xFF
+        lsr zrf, r1, $0x08
 
         mov zil, $12
         add zpc, $1
@@ -2833,6 +3307,21 @@ opORAn:  @0xF6
 
         mov zil, $8
         add zpc, $2
+        b cpu_inst_r
+
+opR30H:  @0xF7
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $32
+        mov zpc, $0x30
         b cpu_inst_r
 
 opLDHLSn:@0xF8
@@ -2886,7 +3375,7 @@ opEI:    @0xFB
         add zpc, $1
         b cpu_inst_r
 
-opRET:   @0xFD
+opEXIT:  @0xFD
         mov r0, zra
         add zpc, $1
 
@@ -2922,3 +3411,17 @@ opCAn:   @0xFE
         add zpc, $2
         b cpu_inst_r
 
+opR38H:  @0xFF
+        add r0, zpc, $3
+        bic r0, $0x00FF0000
+        bic r0, $0xFF000000
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r0, r0, zsp, lsl $0x10
+        bl mmu_wh
+
+        mov zil, $32
+        mov zpc, $0x38
+        b cpu_inst_r

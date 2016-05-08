@@ -138,7 +138,11 @@ mmu_wb:
         .global mmu_rh
 mmu_rh:
         ldr r1, =mem
-        ldrh r1, [r1, r0]
+        add r0, r1
+        ldrb r1, [r0]
+        add r0, $1
+        ldrb r0, [r0]
+        orr r1, r0, lsl $0x08
         mov pc, lr
 
         .global mmu_wh
