@@ -187,7 +187,7 @@ opNOP:   @0x00
 
 opLDBCnn:@0x01
         bl mmu_rih1
-        and zrc, r1, $0x0F
+        and zrc, r1, $0xFF
         lsr zrb, r1, $0x08
 
         mov zil, $12
@@ -253,7 +253,7 @@ opLDBn:  @0x06
 
 opLDnnSP:@0x08
         bl mmu_rih1
-        orr r0, sp, r0, lsl $0x10
+        orr r0, sp, r1, lsl $0x10
         bl mmu_wh
 
         mov zil, $20
@@ -279,7 +279,7 @@ opLDCn:  @0x0E
 
 opLDDEnn:@0x11
         bl mmu_rih1
-        and zre, r1, $0x0F
+        and zre, r1, $0xFF
         lsr zrd, r1, $0x08
 
         mov zil, $12
@@ -303,7 +303,7 @@ opLDDn:  @0x16
         add zpc, $2
         b cpu_inst_r
 
-opLDADE: @0x0A
+opLDADE: @0x1A
         orr r0, zre, zrd, lsl $0x08
         bl mmu_rb
 
@@ -450,8 +450,8 @@ opLDHLnn:@0x21
         b cpu_inst_r
 
 opLDHLiA:@0x22
-        orr r0, zrl, zrh, lsl $8
-        orr r0, zra, r0, lsl $16
+        orr r0, zrl, zrh, lsl $0x08
+        orr r0, zra, r0, lsl $0x10
         bl mmu_wb
 
         add zrl, $1
@@ -514,7 +514,7 @@ opLDHn:  @0x26
         b cpu_inst_r
 
 opLDAHLi:@0x2A
-        orr r0, zrl, zrh, lsl $8
+        orr r0, zrl, zrh, lsl $0x08
         bl mmu_rb
         mov zra, r1
 
@@ -585,17 +585,15 @@ opCPL:   @0x2F
 
 opLDSPnn:@0x31
         bl mmu_rih1
-        and sp, r1, $0x0F
-        lsl sp, $0x08
-        orr sp, r1, lsr $0x08
+        mov zsp, r1
 
         mov zil, $12
         add zpc, $3
         b cpu_inst_r
 
 opLDHLdA:@0x32
-        orr r0, zrl, zrh, lsl $8
-        orr r0, zra, r0, lsl $16
+        orr r0, zrl, zrh, lsl $0x08
+        orr r0, zra, r0, lsl $0x10
         bl mmu_wb
 
         subs zrl, $1
@@ -665,11 +663,11 @@ opLDHLn: @0x36
         orr r0, r1, r0, lsl $0x10
         bl mmu_wb
 
-        mov zil, $8
+        mov zil, $12
         add zpc, $1
         b cpu_inst_r
 
-opSCF:   @0x36
+opSCF:   @0x37
         bic zrf, $flN           @ reset subtract
         bic zrf, $flH           @ reset half-carry
         orr zrf, $flC           @ set carry
@@ -679,7 +677,7 @@ opSCF:   @0x36
         b cpu_inst_r
 
 opLDAHLd:@0x3A
-        orr r0, zrl, zrh, lsl $8
+        orr r0, zrl, zrh, lsl $0x08
         bl mmu_rb
         mov zra, r1
 
@@ -2313,9 +2311,10 @@ opCAA:   @0xBF
         b cpu_inst_r
 
 opPOPBC: @0xC1
-        add sp, $2
+        mov r0, zsp
+        add zsp, $2
         bl mmu_rh
-        and zrc, r1, $0x0F
+        and zrc, r1, $0xFF
         lsr zrb, r1, $0x08
 
         mov zil, $12
@@ -2323,9 +2322,9 @@ opPOPBC: @0xC1
         b cpu_inst_r
 
 opPUSBC: @0xC5
-        sub sp, $2
+        sub zsp, $2
         orr r0, zrc, zrb, lsl $0x08
-        orr r0, r0, sp, lsl $0x10
+        orr r0, r0, zsp, lsl $0x10
         bl mmu_wh
 
         mov zil, $16
@@ -2383,9 +2382,10 @@ opAcAn:  @0xCE
         b cpu_inst_r
 
 opPOPDE: @0xD1
-        add sp, $2
+        mov r0, zsp
+        add zsp, $2
         bl mmu_rh
-        and zre, r1, $0x0F
+        and zre, r1, $0xFF
         lsr zrd, r1, $0x08
 
         mov zil, $12
@@ -2393,9 +2393,9 @@ opPOPDE: @0xD1
         b cpu_inst_r
 
 opPUSDE: @0xD5
-        sub sp, $2
+        sub zsp, $2
         orr r0, zre, zrd, lsl $0x08
-        orr r0, r0, sp, lsl $0x10
+        orr r0, r0, zsp, lsl $0x10
         bl mmu_wh
 
         mov zil, $16
@@ -2464,9 +2464,10 @@ opLDFnA: @0xE0
         b cpu_inst_r
 
 opPOPHL: @0xE1
-        add sp, $2
+        mov r0, zsp
+        add zsp, $2
         bl mmu_rh
-        and zrl, r1, $0x0F
+        and zrl, r1, $0xFF
         lsr zrh, r1, $0x08
 
         mov zil, $12
@@ -2483,9 +2484,9 @@ opLDFCA: @0xE2
         b cpu_inst_r
 
 opPUSHL: @0xE5
-        sub sp, $2
+        sub zsp, $2
         orr r0, zrl, zrh, lsl $0x08
-        orr r0, r0, sp, lsl $0x10
+        orr r0, r0, zsp, lsl $0x10
         bl mmu_wh
 
         mov zil, $16
@@ -2536,9 +2537,10 @@ opLDAFn: @0xF0
         b cpu_inst_r
 
 opPOPAF: @0xF1
-        add sp, $2
+        mov r0, zsp
+        add zsp, $2
         bl mmu_rh
-        and zrf, r1, $0x0F
+        and zrf, r1, $0xFF
         lsr zra, r1, $0x08
 
         mov zil, $12
@@ -2555,9 +2557,9 @@ opLDAFC: @0xF2
         b cpu_inst_r
 
 opPUSAF: @0xF5
-        sub sp, $2
+        sub zsp, $2
         orr r0, zrf, zra, lsl $0x08
-        orr r0, r0, sp, lsl $0x10
+        orr r0, r0, zsp, lsl $0x10
         bl mmu_wh
 
         mov zil, $16
@@ -2577,31 +2579,47 @@ opORAn:  @0xF6
         b cpu_inst_r
 
 opLDHLSn:@0xF8
-        bl mmu_ris1             @ r1 is sign extended
-        add r0, r1, sp          @ sp is unsigned, of course
-        and zrl, r0, $0x0F
-        lsr zrh, r0, $0x08
+        @ NOTE: The docs are pretty unclear on the flags here.
+        @ I'm guessing it is treated like a typical 16-bit add.
+
+        bl mmu_ri1
 
         eor zrf, zrf            @ reset all flags
-        eor r0, r0, r1
-        eor r0, r0, sp          @ XOR all three
-        tst r0, $0x10           @ if bit 4 is set
+
+        add r0, r1, zsp
+
+        eor r1, r1, zsp
+        eor r1, r1, r0          @ XOR all three
+        tst r1, $0x1000         @ if bit 12 is set
         orrne zrf, $flH                 @ set half-carry
-        tst r0, $0x100          @ if bit 8 is set
+
+        tst r0, $0x10000        @ if bit 16 is set
         orrne zrf, $flC                 @ set full-carry
-        andne zrh, $0xF                 @ clear the carried bit
-        
+
+        and zrl, r0, $0xFF
+        lsr zrh, r0, $0x08
+        and zrh, $0xFF                  @ clear any carried bit(s)
+
         mov zil, $12
         add zpc, $2
         b cpu_inst_r
 
 opLDSHL: @0xF9
-        and sp, zrl, $0x0F
-        lsl sp, $0x08
-        orr sp, zrh
+        mov sp, zrl
+        orr sp, zrh, lsl $0x08
 
         mov zil, $8
         add zpc, $1
+        b cpu_inst_r
+
+opLDAnn: @0xFA
+        bl mmu_rih1
+        mov r0, r1
+        bl mmu_rb
+
+        mov zra, r1
+        add zil, $16
+        add zpc, $3
         b cpu_inst_r
 
 opRET:   @0xFD
@@ -2631,15 +2649,5 @@ opCAn:   @0xFE
 
         mov zil, $8
         add zpc, $2
-        b cpu_inst_r
-
-opLDAnn: @0xFA
-        bl mmu_rih1
-        mov r0, r1
-        bl mmu_rb
-
-        mov zra, r1
-        add zil, $16
-        add zpc, $3
         b cpu_inst_r
 
