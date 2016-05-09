@@ -275,7 +275,7 @@ opRLCA:  @0x07
 
 opLDnnSP:@0x08
         bl mmu_rih1
-        orr r0, sp, r1, lsl $0x10
+        orr r0, zsp, r1, lsl $0x10
         bl mmu_wh
 
         mov zil, $20
@@ -1001,9 +1001,9 @@ opAHLSP: @0x39
         bic zrf, $flN           @ reset subtract
 
         orr r1, zrl, zrh, lsl $0x08     @ put HL in r1
-        add r0, r1, sp
+        add r0, r1, zsp
 
-        eor r1, r1, sp
+        eor r1, r1, zsp
         eor r1, r1, r0          @ XOR all three
         tst r1, $0x1000         @ if bit 12 is set
         orrne zrf, $flH                 @ set half-carry
@@ -3351,8 +3351,8 @@ opLDHLSn:@0xF8
         b cpu_inst_r
 
 opLDSHL: @0xF9
-        mov sp, zrl
-        orr sp, zrh, lsl $0x08
+        mov zsp, zrl
+        orr zsp, zrh, lsl $0x08
 
         mov zil, $8
         add zpc, $1
@@ -3372,6 +3372,27 @@ opEI:    @0xFB
         @ TODO: Enable interrupts
 
         add zil, $4
+        add zpc, $1
+        b cpu_inst_r
+
+opNI:    @0xFC
+        /* MOVING BACK TO SYS */
+
+        ldr r0, =Z80RS
+        stmea r0, {r2-r14}
+
+        ldr r0, =SYSRS_E
+        ldmea r0, {r4-r14}
+
+        mov r0, r1
+        bl opcode_not_implemented
+
+        /* RESTORING Z80 REG */
+
+        ldr r0, =Z80RS_E
+        ldmea r0, {r2-r14}
+
+        add zil, $1
         add zpc, $1
         b cpu_inst_r
 

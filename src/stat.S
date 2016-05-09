@@ -3,25 +3,23 @@ smsg:   .ascii "STAT:    A    B    C    D    E    F    H    L   PC   IL   SP (PC
 rmsg:   .ascii "REG: "
 emsg:   .ascii "\n----------------------------------------------------------------------\n"
 hexch:  .ascii "0123456789ABCDEF"
-nimsg:  .ascii ": This operation is not implemented\n"
+nimsg:  .ascii ": This opcode is not implemented\n"
 
         .text
-        .global opNI
-opNI:
-        mov r0, r1
+
+        .global opcode_not_implemented
+opcode_not_implemented:
+        stmfd sp!, {r7, lr}
+
         bl hex_print
 
         mov r0, $1
         ldr r1, =nimsg
-        mov r2, $36
+        mov r2, $33
         mov r7, $4
         swi $0
 
-        mov r0, $1
-        mov r7, $1
-        swi $0
-
-        mov pc, lr
+        ldmfd sp!, {r7, pc}
 
         .global stat_print
 stat_print:
