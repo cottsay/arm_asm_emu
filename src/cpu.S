@@ -65,45 +65,81 @@ zsp     .req sp
         .equ flC, 0x10
 
         .data
+
 Z80RS:  .space 52
 Z80RS_E:
 SYSRS:  .space 44
 SYSRS_E:
-                  @0/8     @1/9     @2/A    @3/B    @4/C    @5/D    @6/E    @7/F
-ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA  @0
+
+ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA
         .word opLDnnSP, opAHLBC, opLDABC,  opDBC,   opIC,   opDC, opLDCn, opRRCA
-        .word   opSTOP,opLDDEnn, opLDDEA,  opIDE,   opID,   opDD, opLDDn,  opRLA  @1
+        .word   opSTOP,opLDDEnn, opLDDEA,  opIDE,   opID,   opDD, opLDDn,  opRLA
         .word    opJRn, opAHLDE, opLDADE,  opDDE,   opIE,   opDE, opLDEn,  opRRA
-        .word  opJRNZn,opLDHLnn,opLDHLiA,  opIHL,   opIH,   opDH, opLDHn,  opDAA  @2
+        .word  opJRNZn,opLDHLnn,opLDHLiA,  opIHL,   opIH,   opDH, opLDHn,  opDAA
         .word   opJRZn, opAHLHL,opLDAHLi,  opDHL,   opIL,   opDL, opLDLn,  opCPL
-        .word  opJRNCn,opLDSPnn,opLDHLdA,  opISP, opIHLm, opDHLm,opLDHLn,  opSCF  @3
+        .word  opJRNCn,opLDSPnn,opLDHLdA,  opISP, opIHLm, opDHLm,opLDHLn,  opSCF
         .word   opJRCn, opAHLSP,opLDAHLd,  opDSP,   opIA,   opDA, opLDAn,  opCCF
-        .word   opLDBB,  opLDBC,  opLDBD, opLDBE, opLDBH, opLDBL,opLDBHL, opLDBA  @4
+        .word   opLDBB,  opLDBC,  opLDBD, opLDBE, opLDBH, opLDBL,opLDBHL, opLDBA
         .word   opLDCB,  opLDCC,  opLDCD, opLDCE, opLDCH, opLDCL,opLDCHL, opLDCA
-        .word   opLDDB,  opLDDC,  opLDDD, opLDDE, opLDDH, opLDDL,opLDDHL, opLDDA  @5
+        .word   opLDDB,  opLDDC,  opLDDD, opLDDE, opLDDH, opLDDL,opLDDHL, opLDDA
         .word   opLDEB,  opLDEC,  opLDED, opLDEE, opLDEH, opLDEL,opLDEHL, opLDEA
-        .word   opLDHB,  opLDHC,  opLDHD, opLDHE, opLDHH, opLDHL,opLDHHL, opLDHA  @6
+        .word   opLDHB,  opLDHC,  opLDHD, opLDHE, opLDHH, opLDHL,opLDHHL, opLDHA
         .word   opLDLB,  opLDLC,  opLDLD, opLDLE, opLDLH, opLDLL,opLDLHL, opLDLA
-        .word  opLDHLB, opLDHLC, opLDHLD,opLDHLE,opLDHLH,opLDHLL, opHALT,opLDHLA  @7
+        .word  opLDHLB, opLDHLC, opLDHLD,opLDHLE,opLDHLH,opLDHLL, opHALT,opLDHLA
         .word   opLDAB,  opLDAC,  opLDAD, opLDAE, opLDAH, opLDAL,opLDAHL, opLDAA
-        .word    opAAB,   opAAC,   opAAD,  opAAE,  opAAH,  opAAL, opAAHL,  opAAA  @8
+        .word    opAAB,   opAAC,   opAAD,  opAAE,  opAAH,  opAAL, opAAHL,  opAAA
         .word   opAcAB,  opAcAC,  opAcAD, opAcAE, opAcAH, opAcAL,opAcAHL, opAcAA
-        .word    opSAB,   opSAC,   opSAD,  opSAE,  opSAH,  opSAL, opSAHL,  opSAA  @9
+        .word    opSAB,   opSAC,   opSAD,  opSAE,  opSAH,  opSAL, opSAHL,  opSAA
         .word   opScAB,  opScAC,  opScAD, opScAE, opScAH, opScAL,opScAHL, opScAA
-        .word   opANAB,  opANAC,  opANAD, opANAE, opANAH, opANAL,opANAHL, opANAA  @A
+        .word   opANAB,  opANAC,  opANAD, opANAE, opANAH, opANAL,opANAHL, opANAA
         .word   opXOAB,  opXOAC,  opXOAD, opXOAE, opXOAH, opXOAL,opXOAHL, opXOAA
-        .word   opORAB,  opORAC,  opORAD, opORAE, opORAH, opORAL,opORAHL, opORAA  @B
+        .word   opORAB,  opORAC,  opORAD, opORAE, opORAH, opORAL,opORAHL, opORAA
         .word    opCAB,   opCAC,   opCAD,  opCAE,  opCAH,  opCAL, opCAHL,  opCAA
-        .word  opRETNZ, opPOPBC,opJPNZnn, opJPnn,opCNZnn,opPUSBC,  opAAn, opR00H  @C
-        .word   opRETZ,   opRET, opJPZnn,   opNI, opCZnn,  opCnn, opAcAn, opR08H
-        .word  opRETNC, opPOPDE,opJPNCnn,   opNI,opCNCnn,opPUSDE,  opSAn, opR10H  @D
+        .word  opRETNZ, opPOPBC,opJPNZnn, opJPnn,opCNZnn,opPUSBC,  opAAn, opR00H
+        .word   opRETZ,   opRET, opJPZnn,  opCBP, opCZnn,  opCnn, opAcAn, opR08H
+        .word  opRETNC, opPOPDE,opJPNCnn,   opNI,opCNCnn,opPUSDE,  opSAn, opR10H
         .word   opRETC,  opRETI, opJPCnn,   opNI, opCCnn,   opNI, opScAn, opR18H
-        .word  opLDFnA, opPOPHL, opLDFCA,   opNI,   opNI,opPUSHL, opANAn, opR20H  @E
+        .word  opLDFnA, opPOPHL, opLDFCA,   opNI,   opNI,opPUSHL, opANAn, opR20H
         .word   opASPn,  opJPHL, opLDnnA,   opNI,   opNI,   opNI, opXOAn, opR28H
-        .word  opLDAFn, opPOPAF, opLDAFC,   opDI,   opNI,opPUSAF, opORAn, opR30H  @F
+        .word  opLDAFn, opPOPAF, opLDAFC,   opDI,   opNI,opPUSAF, opORAn, opR30H
         .word opLDHLSn, opLDSHL, opLDAnn,   opEI,   opNI, opEXIT,  opCAn, opR38H
+                  @0/8     @1/9     @2/A    @3/B    @4/C    @5/D    @6/E    @7/F
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @0
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @1
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @2
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @3
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @4
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @5
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @6
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @7
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @8
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @9
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @A
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @B
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @C
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @D
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @E
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @F
+        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
+                  @0/8     @1/9     @2/A    @3/B    @4/C    @5/D    @6/E    @7/F
 
         .text
+
         .global cpu_init
 cpu_init:
         ldr r0, =SYSRS
@@ -2820,6 +2856,19 @@ opJPZnn: @0xCA
         bl mmu_rih1
         mov zpc, r1
         b cpu_inst_r
+
+opCBP:   @ 0xCB
+        add zpc, $1
+
+        @ fix PC overflow
+        bic zpc, $0x10000
+
+        /* Load CB Instruction */
+        bl mmu_ri
+
+        /* CB prefix opcode table follows primary */
+        orr r1, $0x100
+        ldrls pc, [zop, r1, lsl $2]
 
 opCZnn:  @0xCC
         mov zil, $12

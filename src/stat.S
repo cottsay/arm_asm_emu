@@ -1,4 +1,13 @@
+/******************************************************************************
+ * \file stat.S
+ *
+ * \brief Modified Z80 Status Messages for Linux
+ *
+ * \author Scott K Logan
+ ******************************************************************************/
+
         .data
+
 smsg:   .ascii "STAT:    A    B    C    D    E    F    H    L   PC   IL   SP (PC) FLAG\n"
 rmsg:   .ascii "REG: "
 emsg:   .ascii "\n----------------------------------------------------------------------\n"
@@ -10,6 +19,10 @@ nimsg:  .ascii ": This opcode is not implemented\n"
         .global opcode_not_implemented
 opcode_not_implemented:
         stmfd sp!, {r7, lr}
+
+        cmp r0, $0x00FF
+        andgt r0, $0x00FF
+        orrge r0, $0xCB00
 
         bl hex_print
 

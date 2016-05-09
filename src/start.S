@@ -1,7 +1,7 @@
 /******************************************************************************
  * \file start.S
  *
- * \brief Emulator initialization and startup
+ * \brief Emulator initialization and startup for Linux
  *
  * \author Scott K Logan
  ******************************************************************************/
