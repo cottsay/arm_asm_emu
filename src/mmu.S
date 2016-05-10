@@ -15,7 +15,9 @@
         .bss
 
 bswap:  .space 256
-mem:    .space 65536
+mem:    .space 1
+mem1:   .space 1
+mem2:   .space 65534
 
         .text
 
@@ -93,26 +95,20 @@ mmu_ri:
 
         .global mmu_ri1
 mmu_ri1:
-        ldr r1, =mem
-        add r1, $1
+        ldr r1, =mem1
         ldrb r1, [r1, r11]
         mov pc, lr
 
         .global mmu_ri2
 mmu_ri2:
-        ldr r1, =mem
-        add r1, $2
+        ldr r1, =mem2
         ldrb r1, [r1, r11]
         mov pc, lr
 
         .global mmu_rih1
 mmu_rih1:
-        ldr r0, =mem
-        add r0, $1
-        ldrb r1, [r0, r11]
-        add r0, $1
-        ldrb r0, [r0, r11]
-        orr r1, r0, lsl $0x08
+        ldr r1, =mem1
+        ldrh r1, [r1, r11]
         mov pc, lr
 
         .global mmu_rb
@@ -130,18 +126,12 @@ mmu_wb:
         .global mmu_rh
 mmu_rh:
         ldr r1, =mem
-        add r0, r1
-        ldrb r1, [r0]
-        add r0, $1
-        ldrb r0, [r0]
-        orr r1, r0, lsl $0x08
+        ldrh r1, [r1, r0]
         mov pc, lr
 
         .global mmu_wh
 mmu_wh:
         ldr r1, =mem
-        strb r0, [r1, r0, lsr $16]
-        add r1, $1
-        lsr r0, $8
-        strb r0, [r1, r0, lsr $8]
+        add r1, r0, lsr $0x10
+        strh r0, [r1]
         mov pc, lr
