@@ -103,40 +103,38 @@ ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA
         .word   opASPn,  opJPHL, opLDnnA,   opNI,   opNI,   opNI, opXOAn, opR28H
         .word  opLDAFn, opPOPAF, opLDAFC,   opDI,   opNI,opPUSAF, opORAn, opR30H
         .word opLDHLSn, opLDSHL, opLDAnn,   opEI,   opNI, opEXIT,  opCAn, opR38H
-                  @0/8     @1/9     @2/A    @3/B    @4/C    @5/D    @6/E    @7/F
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @0
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @1
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @2
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @3
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @4
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @5
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @6
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @7
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @8
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @9
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @A
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @B
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @C
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @D
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @E
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI @F
-        .word     opNI,    opNI,    opNI,   opNI,   opNI,   opNI,   opNI,   opNI
-                  @0/8     @1/9     @2/A    @3/B    @4/C    @5/D    @6/E    @7/F
+        .word   cbRLCB,  cbRLCC,  cbRLCD, cbRLCE, cbRLCH, cbRLCL,cbRLCHL, cbRLCA
+        .word    cbRLB,   cbRLC,   cbRLD,  cbRLE,  cbRLH,  cbRLL, cbRLHL,  cbRLA
+        .word   cbRRCB,  cbRRCC,  cbRRCD, cbRRCE, cbRRCH, cbRRCL,cbRRCHL, cbRRCA
+        .word    cbRRB,   cbRRC,   cbRRD,  cbRRE,  cbRRH,  cbRRL, cbRRHL,  cbRRA
+        .word   cbSLAB,  cbSLAC,  cbSLAD, cbSLAE, cbSLAH, cbSLAL,cbSLAHL, cbSLAA
+        .word   cbSRAB,  cbSRAC,  cbSRAD, cbSRAE, cbSRAH, cbSRAL,cbSRAHL, cbSRAA
+        .word   cbSWPB,  cbSWPC,  cbSWPD, cbSWPE, cbSWPH, cbSWPL,cbSWPHL, cbSWPA
+        .word   cbSRLB,  cbSRLC,  cbSRLD, cbSRLE, cbSRLH, cbSRLL,cbSRLHL, cbSRLA
+        .word   cbBT0B,  cbBT0C,  cbBT0D, cbBT0E, cbBT0H, cbBT0L,cbBT0HL, cbBT0A
+        .word   cbBT1B,  cbBT1C,  cbBT1D, cbBT1E, cbBT1H, cbBT1L,cbBT1HL, cbBT1A
+        .word   cbBT2B,  cbBT2C,  cbBT2D, cbBT2E, cbBT2H, cbBT2L,cbBT2HL, cbBT2A
+        .word   cbBT3B,  cbBT3C,  cbBT3D, cbBT3E, cbBT3H, cbBT3L,cbBT3HL, cbBT3A
+        .word   cbBT4B,  cbBT4C,  cbBT4D, cbBT4E, cbBT4H, cbBT4L,cbBT4HL, cbBT4A
+        .word   cbBT5B,  cbBT5C,  cbBT5D, cbBT5E, cbBT5H, cbBT5L,cbBT5HL, cbBT5A
+        .word   cbBT6B,  cbBT6C,  cbBT6D, cbBT6E, cbBT6H, cbBT6L,cbBT6HL, cbBT6A
+        .word   cbBT7B,  cbBT7C,  cbBT7D, cbBT7E, cbBT7H, cbBT7L,cbBT7HL, cbBT7A
+        .word   cbRS0B,  cbRS0C,  cbRS0D, cbRS0E, cbRS0H, cbRS0L,cbRS0HL, cbRS0A
+        .word   cbRS1B,  cbRS1C,  cbRS1D, cbRS1E, cbRS1H, cbRS1L,cbRS1HL, cbRS1A
+        .word   cbRS2B,  cbRS2C,  cbRS2D, cbRS2E, cbRS2H, cbRS2L,cbRS2HL, cbRS2A
+        .word   cbRS3B,  cbRS3C,  cbRS3D, cbRS3E, cbRS3H, cbRS3L,cbRS3HL, cbRS3A
+        .word   cbRS4B,  cbRS4C,  cbRS4D, cbRS4E, cbRS4H, cbRS4L,cbRS4HL, cbRS4A
+        .word   cbRS5B,  cbRS5C,  cbRS5D, cbRS5E, cbRS5H, cbRS5L,cbRS5HL, cbRS5A
+        .word   cbRS6B,  cbRS6C,  cbRS6D, cbRS6E, cbRS6H, cbRS6L,cbRS6HL, cbRS6A
+        .word   cbRS7B,  cbRS7C,  cbRS7D, cbRS7E, cbRS7H, cbRS7L,cbRS7HL, cbRS7A
+        .word   cbST0B,  cbST0C,  cbST0D, cbST0E, cbST0H, cbST0L,cbST0HL, cbST0A
+        .word   cbST1B,  cbST1C,  cbST1D, cbST1E, cbST1H, cbST1L,cbST1HL, cbST1A
+        .word   cbST2B,  cbST2C,  cbST2D, cbST2E, cbST2H, cbST2L,cbST2HL, cbST2A
+        .word   cbST3B,  cbST3C,  cbST3D, cbST3E, cbST3H, cbST3L,cbST3HL, cbST3A
+        .word   cbST4B,  cbST4C,  cbST4D, cbST4E, cbST4H, cbST4L,cbST4HL, cbST4A
+        .word   cbST5B,  cbST5C,  cbST5D, cbST5E, cbST5H, cbST5L,cbST5HL, cbST5A
+        .word   cbST6B,  cbST6C,  cbST6D, cbST6E, cbST6H, cbST6L,cbST6HL, cbST6A
+        .word   cbST7B,  cbST7C,  cbST7D, cbST7E, cbST7H, cbST7L,cbST7HL, cbST7A
 
         .text
 
@@ -207,9 +205,45 @@ cpu_stat:
         ldr r0, =Z80RS_E
         ldmea r0, {r2-r13, pc}
 
+/* SPECIAL INSTRUCTIONS */
+
+opNI:
+        /* MOVING BACK TO SYS */
+
+        ldr r0, =Z80RS
+        stmea r0, {r2-r14}
+
+        ldr r0, =SYSRS_E
+        ldmea r0, {r4-r14}
+
+        mov r0, r1
+        bl opcode_not_implemented
+
+        /* RESTORING Z80 REG */
+
+        ldr r0, =Z80RS_E
+        ldmea r0, {r2-r14}
+
+        add zil, $1
+        add zpc, $1
+        b cpu_inst_r
+
+opEXIT:
+        mov r0, zra
+        add zpc, $1
+
+        /* MOVING BACK TO SYS */
+
+        ldr r1, =Z80RS
+        stmea r1, {r2-r14}
+
+        ldr r0, =SYSRS_E
+        ldmea r0, {r4-r13, pc}
+
         .ltorg    @ keep literal pool close
 
 /* INSTRUCTIONS */
+
 opNOP:   @0x00
         mov zil, $4
         add zpc, $1
@@ -636,7 +670,7 @@ opLDEn:  @0x1E
         add zpc, $2
         b cpu_inst_r
 
-opRRA :  @0x1F
+opRRA:   @0x1F
         tst zrf, $flC           @ if carry
         orrne zra, $0x100               @ set bit 8
 
@@ -3424,39 +3458,6 @@ opEI:    @0xFB
         add zpc, $1
         b cpu_inst_r
 
-opNI:    @0xFC
-        /* MOVING BACK TO SYS */
-
-        ldr r0, =Z80RS
-        stmea r0, {r2-r14}
-
-        ldr r0, =SYSRS_E
-        ldmea r0, {r4-r14}
-
-        mov r0, r1
-        bl opcode_not_implemented
-
-        /* RESTORING Z80 REG */
-
-        ldr r0, =Z80RS_E
-        ldmea r0, {r2-r14}
-
-        add zil, $1
-        add zpc, $1
-        b cpu_inst_r
-
-opEXIT:  @0xFD
-        mov r0, zra
-        add zpc, $1
-
-        /* MOVING BACK TO SYS */
-
-        ldr r1, =Z80RS
-        stmea r1, {r2-r14}
-
-        ldr r0, =SYSRS_E
-        ldmea r0, {r4-r13, pc}
-
 opCAn:   @0xFE
         bl mmu_ri1
 
@@ -3494,4 +3495,2822 @@ opR38H:  @0xFF
 
         mov zil, $32
         mov zpc, $0x38
+        b cpu_inst_r
+
+/* CB-PREFIX INSTRUCTIONS */
+
+cbRLCB:  @0xCB00
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrb, $1
+        tst zrb, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrb, $0x01                @ set bit 0
+
+        ands zrb, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLCC:  @0xCB01
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrc, $1
+        tst zrc, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrc, $0x01                @ set bit 0
+
+        ands zrc, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLCD:  @0xCB02
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrd, $1
+        tst zrd, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrd, $0x01                @ set bit 0
+
+        ands zrd, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLCE:  @0xCB03
+        eor zrf, zrf            @ reset all flags
+
+        lsl zre, $1
+        tst zre, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zre, $0x01                @ set bit 0
+
+        ands zre, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLCH:  @0xCB04
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrh, $1
+        tst zrh, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrh, $0x01                @ set bit 0
+
+        ands zrh, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLCL:  @0xCB05
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrl, $1
+        tst zrl, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrl, $0x01                @ set bit 0
+
+        ands zrl, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLCHL: @0xCB06
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl r1, $1
+        tst r1, $0x100          @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne r1, $0x01                 @ set bit 0
+
+        ands r1, $0xFF          @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLCA:  @0xCB07
+        eor zrf, zrf            @ reset all flags
+
+        lsl zra, $1
+        tst zra, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zra, $0x01                @ set bit 0
+
+        ands zra, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRCB:  @0xCB08
+        eor zrf, zrf            @ reset all flags
+
+        tst zrb, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrb, $0x100               @ set bit 8
+
+        lsrs zrb, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRCC:  @0xCB09
+        eor zrf, zrf            @ reset all flags
+
+        tst zrc, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrc, $0x100               @ set bit 8
+
+        lsrs zrc, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRCD:  @0xCB0A
+        eor zrf, zrf            @ reset all flags
+
+        tst zrd, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrd, $0x100               @ set bit 8
+
+        lsrs zrd, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRCE:  @0xCB0B
+        eor zrf, zrf            @ reset all flags
+
+        tst zre, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zre, $0x100               @ set bit 8
+
+        lsrs zre, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRCH:  @0xCB0C
+        eor zrf, zrf            @ reset all flags
+
+        tst zrh, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrh, $0x100               @ set bit 8
+
+        lsrs zrh, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRCL:  @0xCB0D
+        eor zrf, zrf            @ reset all flags
+
+        tst zrl, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zrl, $0x100               @ set bit 8
+
+        lsrs zrl, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRCHL: @0xCB0E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        eor zrf, zrf            @ reset all flags
+
+        tst r1, $0x01           @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne r1, $0x100                @ set bit 8
+
+        lsrs r1, $1
+        orreq zrf, $flZ         @ set zero
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRCA:  @0xCB0F
+        eor zrf, zrf            @ reset all flags
+
+        tst zra, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+        orrne zra, $0x100               @ set bit 8
+
+        lsrs zra, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLB:   @0xCB10
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrb, $1
+        orrne zrb, $0x01
+
+        tst zrb, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrb, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLC:   @0xCB11
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrc, $1
+        orrne zrc, $0x01
+
+        tst zrc, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrc, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLD:   @0xCB12
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrd, $1
+        orrne zrd, $0x01
+
+        tst zrd, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrd, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLE:   @0xCB13
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl zre, $1
+        orrne zre, $0x01
+
+        tst zre, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zre, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLH:   @0xCB14
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrh, $1
+        orrne zrh, $0x01
+
+        tst zrh, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrh, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLL:   @0xCB15
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrl, $1
+        orrne zrl, $0x01
+
+        tst zrl, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrl, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLHL:  @0xCB16
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl r1, $1
+        orrne r1, $0x01
+
+        tst r1, $0x100          @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands r1, $0xFF          @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbRLA:   @0xCB17
+        tst zrf, $flC
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl zra, $1
+        orrne zra, $0x01
+
+        tst zra, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zra, $0xFF         @ clear any carried bit(s)
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRB:   @0xCB18
+        tst zrf, $flC           @ if carry
+        orrne zrb, $0x100               @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst zrb, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrb, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRC:   @0xCB19
+        tst zrf, $flC           @ if carry
+        orrne zrc, $0x100               @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst zrc, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrc, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRD:   @0xCB1A
+        tst zrf, $flC           @ if carry
+        orrne zrd, $0x100               @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst zrd, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrd, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRE:   @0xCB1B
+        tst zrf, $flC           @ if carry
+        orrne zre, $0x100               @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst zre, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zre, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRH:   @0xCB1C
+        tst zrf, $flC           @ if carry
+        orrne zrh, $0x100               @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst zrh, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrh, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRL:   @0xCB1D
+        tst zrf, $flC           @ if carry
+        orrne zrl, $0x100               @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst zrl, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrl, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRHL:  @0xCB1E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        tst zrf, $flC           @ if carry
+        orrne r1, $0x100                @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst r1, $0x01           @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs r1, $1
+        orreq zrf, $flZ         @ set zero
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbRRA:   @0xCB1F
+        tst zrf, $flC           @ if carry
+        orrne zra, $0x100               @ set bit 8
+
+        eor zrf, zrf            @ reset all flags
+
+        tst zra, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zra, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSLAB:  @0xCB20
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrb, $1
+
+        tst zrb, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrb, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSLAC:  @0xCB21
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrc, $1
+
+        tst zrc, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrc, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSLAD:  @0xCB22
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrd, $1
+
+        tst zrd, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrd, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSLAE:  @0xCB23
+        eor zrf, zrf            @ reset all flags
+
+        lsl zre, $1
+
+        tst zre, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zre, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSLAH:  @0xCB24
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrh, $1
+
+        tst zrh, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrh, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSLAL:  @0xCB25
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrl, $1
+
+        tst zrl, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zrl, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSLAHL: @0xCB26
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        eor zrf, zrf           @ reset all flags
+
+        lsl r1, $1
+
+        tst r1, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands r1, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbSLAA:  @0xCB27
+        eor zrf, zrf            @ reset all flags
+
+        lsl zra, $1
+
+        tst zra, $0x100         @ if bit 8 is set
+        orrne zrf, $flC                 @ set carry
+
+        ands zra, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRAB:  @0xCB28
+        eor zrf, zrf            @ reset all flags
+
+        tst zrb, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrb, $1
+        orreq zrf, $flZ         @ set zero
+
+        tst zrb, $0x40
+        orrne zrb, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRAC:  @0xCB29
+        eor zrf, zrf            @ reset all flags
+
+        tst zrc, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrc, $1
+        orreq zrf, $flZ         @ set zero
+
+        tst zrc, $0x40
+        orrne zrc, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRAD:  @0xCB2A
+        eor zrf, zrf            @ reset all flags
+
+        tst zrd, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrd, $1
+        orreq zrf, $flZ         @ set zero
+
+        tst zrd, $0x40
+        orrne zrd, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRAE:  @0xCB2B
+        eor zrf, zrf            @ reset all flags
+
+        tst zre, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zre, $1
+        orreq zrf, $flZ         @ set zero
+
+        tst zre, $0x40
+        orrne zre, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRAH:  @0xCB2C
+        eor zrf, zrf            @ reset all flags
+
+        tst zrh, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrh, $1
+        orreq zrf, $flZ         @ set zero
+
+        tst zrh, $0x40
+        orrne zrh, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRAL:  @0xCB2D
+        eor zrf, zrf            @ reset all flags
+
+        tst zrd, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrd, $1
+        orreq zrf, $flZ         @ set zero
+
+        tst zrd, $0x40
+        orrne zrd, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRAHL: @0xCB2E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        eor zrf, zrf            @ reset all flags
+
+        tst r1, $0x01           @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs r1, $1
+        orreq zrf, $flZ         @ set zero
+
+        tst r1, $0x40
+        orrne r1, $0x80
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRAA:  @0xCB2F
+        eor zrf, zrf            @ reset all flags
+
+        tst zra, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zra, $1
+        orreq zrf, $flZ         @ set zero
+
+        tst zra, $0x40
+        orrne zra, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSWPB:  @0xCB30
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrb, $0x04
+        orr zrb, zrb, lsr $0x08
+
+        ands zrb, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSWPC:  @0xCB31
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrc, $0x04
+        orr zrc, zrc, lsr $0x08
+
+        ands zrc, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSWPD:  @0xCB32
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrd, $0x04
+        orr zrd, zrd, lsr $0x08
+
+        ands zrd, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSWPE:  @0xCB33
+        eor zrf, zrf            @ reset all flags
+
+        lsl zre, $0x04
+        orr zre, zre, lsr $0x08
+
+        ands zre, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSWPH:  @0xCB34
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrh, $0x04
+        orr zrh, zrh, lsr $0x08
+
+        ands zrh, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSWPL:  @0xCB35
+        eor zrf, zrf            @ reset all flags
+
+        lsl zrl, $0x04
+        orr zrl, zrl, lsr $0x08
+
+        ands zrl, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSWPHL: @0xCB36
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        eor zrf, zrf            @ reset all flags
+
+        lsl r1, $0x04
+        orr r1, r1, lsr $0x08
+
+        ands r1, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbSWPA:  @0xCB37
+        eor zrf, zrf            @ reset all flags
+
+        lsl zra, $0x04
+        orr zra, zra, lsr $0x08
+
+        ands zra, $0xFF
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRLB:  @0xCB38
+        eor zrf, zrf            @ reset all flags
+
+        tst zrb, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrb, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRLC:  @0xCB39
+        eor zrf, zrf            @ reset all flags
+
+        tst zrc, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrc, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRLD:  @0xCB3A
+        eor zrf, zrf            @ reset all flags
+
+        tst zrd, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrd, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRLE:  @0xCB3B
+        eor zrf, zrf            @ reset all flags
+
+        tst zre, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zre, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRLH:  @0xCB3C
+        eor zrf, zrf            @ reset all flags
+
+        tst zrh, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrh, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRLL:  @0xCB3D
+        eor zrf, zrf            @ reset all flags
+
+        tst zrd, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zrd, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRLHL: @0xCB3E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        eor zrf, zrf            @ reset all flags
+
+        tst r1, $0x01           @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs r1, $1
+        orreq zrf, $flZ         @ set zero
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbSRLA:  @0xCB3F
+        eor zrf, zrf            @ reset all flags
+
+        tst zra, $0x01          @ if bit 0 is set
+        orrne zrf, $flC                 @ set carry
+
+        lsrs zra, $1
+        orreq zrf, $flZ         @ set zero
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT0B:  @0xCB40
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrb, $0x01
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT0C:  @0xCB41
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrc, $0x01
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT0D:  @0xCB42
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrd, $0x01
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT0E:  @0xCB43
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zre, $0x01
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT0H:  @0xCB44
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrh, $0x01
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT0L:  @0xCB45
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrl, $0x01
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT0HL: @0xCB46
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst r1, $0x01
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT0A:  @0xCB47
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zra, $0x01
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT1B:  @0xCB48
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrb, $0x02
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT1C:  @0xCB49
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrc, $0x02
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT1D:  @0xCB4A
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrd, $0x02
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT1E:  @0xCB4B
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zre, $0x02
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT1H:  @0xCB4C
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrh, $0x02
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT1L:  @0xCB4D
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrl, $0x02
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT1HL: @0xCB4E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst r1, $0x02
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT1A:  @0xCB4F
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zra, $0x02
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT2B:  @0xCB50
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrb, $0x04
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT2C:  @0xCB51
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrc, $0x04
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT2D:  @0xCB52
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrd, $0x04
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT2E:  @0xCB53
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zre, $0x04
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT2H:  @0xCB54
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrh, $0x04
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT2L:  @0xCB55
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrl, $0x04
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT2HL: @0xCB56
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst r1, $0x04
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT2A:  @0xCB57
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zra, $0x04
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT3B:  @0xCB58
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrb, $0x08
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT3C:  @0xCB59
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrc, $0x08
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT3D:  @0xCB5A
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrd, $0x08
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT3E:  @0xCB5B
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zre, $0x08
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT3H:  @0xCB5C
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrh, $0x08
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT3L:  @0xCB5D
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrl, $0x08
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT3HL: @0xCB5E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst r1, $0x08
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT3A:  @0xCB5F
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zra, $0x08
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT4B:  @0xCB60
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrb, $0x10
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT4C:  @0xCB61
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrc, $0x10
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT4D:  @0xCB62
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrd, $0x10
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT4E:  @0xCB63
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zre, $0x10
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT4H:  @0xCB64
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrh, $0x10
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT4L:  @0xCB65
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrl, $0x10
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT4HL: @0xCB66
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst r1, $0x10
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT4A:  @0xCB67
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zra, $0x10
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT5B:  @0xCB68
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrb, $0x20
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT5C:  @0xCB69
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrc, $0x20
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT5D:  @0xCB6A
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrd, $0x20
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT5E:  @0xCB6B
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zre, $0x20
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT5H:  @0xCB6C
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrh, $0x20
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT5L:  @0xCB6D
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrl, $0x20
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT5HL: @0xCB6E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst r1, $0x20
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT5A:  @0xCB6F
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zra, $0x20
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT6B:  @0xCB70
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrb, $0x40
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT6C:  @0xCB71
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrc, $0x40
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT6D:  @0xCB72
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrd, $0x40
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT6E:  @0xCB73
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zre, $0x40
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT6H:  @0xCB74
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrh, $0x40
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT6L:  @0xCB75
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrl, $0x40
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT6HL: @0xCB76
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst r1, $0x40
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT6A:  @0xCB77
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zra, $0x40
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT7B:  @0xCB78
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrb, $0x80
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT7C:  @0xCB79
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrc, $0x80
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT7D:  @0xCB7A
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrd, $0x80
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT7E:  @0xCB7B
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zre, $0x80
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT7H:  @0xCB7C
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrh, $0x80
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT7L:  @0xCB7D
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zrl, $0x80
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT7HL: @0xCB7E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst r1, $0x80
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $16
+        add zpc, $1
+        b cpu_inst_r
+
+cbBT7A:  @0xCB7F
+        bic zrf, $flN
+        orr zrf, $flH
+
+        tst zra, $0x80
+        orreq zrf, $flZ
+        bicne zrf, $flZ
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS0B:  @0xCB80
+        bic zrb, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS0C:  @0xCB81
+        bic zrc, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS0D:  @0xCB82
+        bic zrd, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS0E:  @0xCB83
+        bic zre, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS0H:  @0xCB84
+        bic zrh, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS0L:  @0xCB85
+        bic zrl, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS0HL: @0xCB86
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic r1, $0x01
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS0A:  @0xCB87
+        bic zra, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS1B:  @0xCB88
+        bic zrb, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS1C:  @0xCB89
+        bic zrc, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS1D:  @0xCB8A
+        bic zrd, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS1E:  @0xCB8B
+        bic zre, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS1H:  @0xCB8C
+        bic zrh, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS1L:  @0xCB8D
+        bic zrl, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS1HL: @0xCB8E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic r1, $0x02
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS1A:  @0xCB8F
+        bic zra, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS2B:  @0xCB90
+        bic zrb, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS2C:  @0xCB91
+        bic zrc, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS2D:  @0xCB92
+        bic zrd, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS2E:  @0xCB93
+        bic zre, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS2H:  @0xCB94
+        bic zrh, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS2L:  @0xCB95
+        bic zrl, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS2HL: @0xCB96
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic r1, $0x04
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS2A:  @0xCB97
+        bic zra, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS3B:  @0xCB98
+        bic zrb, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS3C:  @0xCB99
+        bic zrc, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS3D:  @0xCB9A
+        bic zrd, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS3E:  @0xCB9B
+        bic zre, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS3H:  @0xCB9C
+        bic zrh, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS3L:  @0xCB9D
+        bic zrl, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS3HL: @0xCB9E
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic r1, $0x08
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS3A:  @0xCB9F
+        bic zra, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS4B:  @0xCBA0
+        bic zrb, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS4C:  @0xCBA1
+        bic zrc, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS4D:  @0xCBA2
+        bic zrd, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS4E:  @0xCBA3
+        bic zre, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS4H:  @0xCBA4
+        bic zrh, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS4L:  @0xCBA5
+        bic zrl, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS4HL: @0xCBA6
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic r1, $0x10
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS4A:  @0xCBA7
+        bic zra, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS5B:  @0xCBA8
+        bic zrb, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS5C:  @0xCBA9
+        bic zrc, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS5D:  @0xCBAA
+        bic zrd, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS5E:  @0xCBAB
+        bic zre, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS5H:  @0xCBAC
+        bic zrh, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS5L:  @0xCBAD
+        bic zrl, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS5HL: @0xCBAE
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic r1, $0x20
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS5A:  @0xCBAF
+        bic zra, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS6B:  @0xCBB0
+        bic zrb, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS6C:  @0xCBB1
+        bic zrc, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS6D:  @0xCBB2
+        bic zrd, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS6E:  @0xCBB3
+        bic zre, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS6H:  @0xCBB4
+        bic zrh, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS6L:  @0xCBB5
+        bic zrl, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS6HL: @0xCBB6
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic r1, $0x40
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS6A:  @0xCBB7
+        bic zra, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS7B:  @0xCBB8
+        bic zrb, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS7C:  @0xCBB9
+        bic zrc, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS7D:  @0xCBBA
+        bic zrd, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS7E:  @0xCBBB
+        bic zre, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS7H:  @0xCBBC
+        bic zrh, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS7L:  @0xCBBD
+        bic zrl, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS7HL: @0xCBBE
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        bic r1, $0x80
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbRS7A:  @0xCBBF
+        bic zra, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST0B:  @0xCBC0
+        orr zrb, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST0C:  @0xCBC1
+        orr zrc, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST0D:  @0xCBC2
+        orr zrd, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST0E:  @0xCBC3
+        orr zre, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST0H:  @0xCBC4
+        orr zrh, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST0L:  @0xCBC5
+        orr zrl, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST0HL: @0xCBC6
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        orr r1, $0x01
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST0A:  @0xCBC7
+        orr zra, $0x01
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST1B:  @0xCBC8
+        orr zrb, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST1C:  @0xCBC9
+        orr zrc, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST1D:  @0xCBCA
+        orr zrd, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST1E:  @0xCBCB
+        orr zre, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST1H:  @0xCBCC
+        orr zrh, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST1L:  @0xCBCD
+        orr zrl, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST1HL: @0xCBCE
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        orr r1, $0x02
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST1A:  @0xCBCF
+        orr zra, $0x02
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST2B:  @0xCBD0
+        orr zrb, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST2C:  @0xCBD1
+        orr zrc, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST2D:  @0xCBD2
+        orr zrd, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST2E:  @0xCBD3
+        orr zre, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST2H:  @0xCBD4
+        orr zrh, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST2L:  @0xCBD5
+        orr zrl, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST2HL: @0xCBD6
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        orr r1, $0x04
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST2A:  @0xCBD7
+        orr zra, $0x04
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST3B:  @0xCBD8
+        orr zrb, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST3C:  @0xCBD9
+        orr zrc, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST3D:  @0xCBDA
+        orr zrd, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST3E:  @0xCBDB
+        orr zre, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST3H:  @0xCBDC
+        orr zrh, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST3L:  @0xCBDD
+        orr zrl, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST3HL: @0xCBDE
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        orr r1, $0x08
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST3A:  @0xCBDF
+        orr zra, $0x08
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST4B:  @0xCBE0
+        orr zrb, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST4C:  @0xCBE1
+        orr zrc, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST4D:  @0xCBE2
+        orr zrd, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST4E:  @0xCBE3
+        orr zre, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST4H:  @0xCBE4
+        orr zrh, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST4L:  @0xCBE5
+        orr zrl, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST4HL: @0xCBE6
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        orr r1, $0x10
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST4A:  @0xCBE7
+        orr zra, $0x10
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST5B:  @0xCBE8
+        orr zrb, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST5C:  @0xCBE9
+        orr zrc, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST5D:  @0xCBEA
+        orr zrd, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST5E:  @0xCBEB
+        orr zre, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST5H:  @0xCBEC
+        orr zrh, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST5L:  @0xCBED
+        orr zrl, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST5HL: @0xCBEE
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        orr r1, $0x20
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST5A:  @0xCBEF
+        orr zra, $0x20
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST6B:  @0xCBF0
+        orr zrb, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST6C:  @0xCBF1
+        orr zrc, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST6D:  @0xCBF2
+        orr zrd, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST6E:  @0xCBF3
+        orr zre, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST6H:  @0xCBF4
+        orr zrh, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST6L:  @0xCBF5
+        orr zrl, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST6HL: @0xCBF6
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        orr r1, $0x40
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST6A:  @0xCBF7
+        orr zra, $0x40
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST7B:  @0xCBF8
+        orr zrb, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST7C:  @0xCBF9
+        orr zrc, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST7D:  @0xCBFA
+        orr zrd, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST7E:  @0xCBFB
+        orr zre, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST7H:  @0xCBFC
+        orr zrh, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST7L:  @0xCBFD
+        orr zrl, $0x80
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST7HL: @0xCBFE
+        orr r0, zrl, zrh, lsl $0x08
+        bl mmu_rb
+
+        orr r1, $0x80
+
+        orr r0, r1, r0, lsl $0x08
+        bl mmu_wb
+
+        add zil, $8
+        add zpc, $1
+        b cpu_inst_r
+
+cbST7A:  @0xCBFF
+        orr zra, $0x80
+
+        add zil, $8
+        add zpc, $1
         b cpu_inst_r
