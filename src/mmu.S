@@ -14,6 +14,7 @@
 
         .bss
 
+bswap:  .space 256
 mem:    .space 65536
 
         .text
@@ -24,16 +25,13 @@ bios:   .byte 0xC3, 0xED, 0x00
         .byte 0x00, 0x01, 0xB0, 0x01, 0xC5, 0xF1, 0x01, 0x13
         .byte 0x00, 0xE0, 0x50
 
-z80hdr: .byte 0x5a, 0x38, 0x30, 0x41, 0x53, 0x4d, 0x1a, 0x0a
-        .byte 0x00, 0x00, 0x00, 0x00
-
         .global mmu_init
 mmu_init:
         mov pc, lr
 
         .global mmu_load
 mmu_load:
-        stmfd sp!, {r7-r8}
+        stmfd sp!, {r4-r9}
 
         sub sp, $12
 
@@ -45,55 +43,46 @@ mmu_load:
         cmp r0, $0
         blt mmu_load_end
 
-        /* Read the header */
-        mov r8, r0
-        mov r7, $3
-        mov r1, sp
-        mov r2, $10
-        svc $0
-        cmp r0, $0
-        blt mmu_load_close
-        cmp r0, $10
-        bne mmu_load_bad_hdr
-
-        /* Verify the header */
-        ldr r0, =z80hdr
-        mov r1, sp
-        ldr r2, [r0]
-        ldr r3, [r1]
-        cmp r2, r3
-        bne mmu_load_bad_hdr
-        ldr r2, [r0, $4]
-        ldr r3, [r1, $4]
-        cmp r2, r3
-        bne mmu_load_bad_hdr
-        ldrh r2, [r0, $8]
-        ldrh r3, [r1, $8]
-        cmp r2, r3
-        bne mmu_load_bad_hdr
-
         /* Read the program */
-        mov r0, r8
         ldr r1, =mem
         mov r2, $65536
         mov r7, $3
         svc $0
 
         cmp r0, $0
-        movgt r0, $0
-        b mmu_load_close
+        ble mmu_load_close
 
-mmu_load_bad_hdr:
-        movne r0, $22
+        /* Copy data to bios swap */
+        ldr r0, =mem
+        ldr r1, =bswap
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+
+        mov r0, $0
 
 mmu_load_close:
         /* Close the file */
         mov r7, $6
         svc $0
+
 mmu_load_end:
         add sp, $12
 
-        ldmfd sp!, {r7-r8}
+        ldmfd sp!, {r4-r9}
         mov pc, lr
 
         .global mmu_ri
