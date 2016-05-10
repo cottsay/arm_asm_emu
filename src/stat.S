@@ -6,15 +6,18 @@
  * \author Scott K Logan
  ******************************************************************************/
 
-        .data
+        .text
 
 smsg:   .ascii "STAT:    A    B    C    D    E    F    H    L   PC   IL   SP (PC) FLAG\n"
+        .align
 rmsg:   .ascii "REG: "
+        .align
 emsg:   .ascii "\n----------------------------------------------------------------------\n"
+        .align
 hexch:  .ascii "0123456789ABCDEF"
+        .align
 nimsg:  .ascii ": This opcode is not implemented\n"
-
-        .text
+        .align
 
         .global opcode_not_implemented
 opcode_not_implemented:
@@ -30,7 +33,7 @@ opcode_not_implemented:
         ldr r1, =nimsg
         mov r2, $33
         mov r7, $4
-        swi $0
+        svc $0
 
         ldmfd sp!, {r7, pc}
 
@@ -45,13 +48,13 @@ stat_print:
         ldr r1, =smsg
         mov r2, $71
         mov r7, $4
-        swi $0
+        svc $0
 
         mov r0, $1
         ldr r1, =rmsg
         mov r2, $5
         mov r7, $4
-        swi $0
+        svc $0
 
         @ zra
         ldr r0, [r6, $4]
@@ -135,7 +138,7 @@ stat_print:
         mov r1, sp
         mov r2, $5
         mov r7, $4
-        swi $0
+        svc $0
 
         add sp, $5
 
@@ -143,7 +146,7 @@ stat_print:
         ldr r1, =emsg
         mov r2, $72
         mov r7, $4
-        swi $0
+        svc $0
 
         ldmfd sp!, {r5-r7, pc}
 
@@ -184,7 +187,7 @@ hex_print:
         mov r1, sp
         mov r2, $5
         mov r7, $4
-        swi $0
+        svc $0
 
         add sp, $5
         ldmfd sp!, {r7}

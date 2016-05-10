@@ -25,4 +25,4 @@ _start_no_load:
         bl cpu_dispatch
 _start_exit:
         mov r7, $1
-        swi $0
+        svc $0

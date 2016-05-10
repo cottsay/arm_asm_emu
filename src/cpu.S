@@ -71,6 +71,8 @@ Z80RS_E:
 SYSRS:  .space 44
 SYSRS_E:
 
+        .text
+
 ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA
         .word opLDnnSP, opAHLBC, opLDABC,  opDBC,   opIC,   opDC, opLDCn, opRRCA
         .word   opSTOP,opLDDEnn, opLDDEA,  opIDE,   opID,   opDD, opLDDn,  opRLA
@@ -135,8 +137,6 @@ ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA
         .word   cbST5B,  cbST5C,  cbST5D, cbST5E, cbST5H, cbST5L,cbST5HL, cbST5A
         .word   cbST6B,  cbST6C,  cbST6D, cbST6E, cbST6H, cbST6L,cbST6HL, cbST6A
         .word   cbST7B,  cbST7C,  cbST7D, cbST7E, cbST7H, cbST7L,cbST7HL, cbST7A
-
-        .text
 
         .global cpu_init
 cpu_init:

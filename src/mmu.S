@@ -6,9 +6,18 @@
  * \author Scott K Logan
  ******************************************************************************/
 
-        .data
+        .equ rom0, (mem)
+        .equ rom1, (mem + 16384)
+        .equ gram, (mem + 32768)
+        .equ eram, (mem + 40960)
+        .equ wram, (mem + 49152)
+
+        .bss
 
 mem:    .space 65536
+
+        .text
+
 bios:   .byte 0xC3, 0xED, 0x00
         .space 234
         .byte 0x31, 0xFE, 0xFF, 0x21, 0x4D, 0x01, 0x11, 0xD8
@@ -17,16 +26,6 @@ bios:   .byte 0xC3, 0xED, 0x00
 
 z80hdr: .byte 0x5a, 0x38, 0x30, 0x41, 0x53, 0x4d, 0x1a, 0x0a
         .byte 0x00, 0x00, 0x00, 0x00
-filhdr: .space 10
-        .byte 0x00, 0x00
-
-        .equ rom0, (mem)
-        .equ rom1, (mem + 16384)
-        .equ gram, (mem + 32768)
-        .equ eram, (mem + 40960)
-        .equ wram, (mem + 49152)
-
-        .text
 
         .global mmu_init
 mmu_init:
@@ -36,20 +35,22 @@ mmu_init:
 mmu_load:
         stmfd sp!, {r7-r8}
 
+        sub sp, $12
+
         /* Open the file */
         mov r1, $0
         mov r2, $0
         mov r7, $5
-        swi $0
+        svc $0
         cmp r0, $0
         blt mmu_load_end
 
         /* Read the header */
         mov r8, r0
         mov r7, $3
-        ldr r1, =filhdr
+        mov r1, sp
         mov r2, $10
-        swi $0
+        svc $0
         cmp r0, $0
         blt mmu_load_close
         cmp r0, $10
@@ -57,7 +58,7 @@ mmu_load:
 
         /* Verify the header */
         ldr r0, =z80hdr
-        ldr r1, =filhdr
+        mov r1, sp
         ldr r2, [r0]
         ldr r3, [r1]
         cmp r2, r3
@@ -66,8 +67,8 @@ mmu_load:
         ldr r3, [r1, $4]
         cmp r2, r3
         bne mmu_load_bad_hdr
-        ldr r2, [r0, $8]
-        ldr r3, [r1, $8]
+        ldrh r2, [r0, $8]
+        ldrh r3, [r1, $8]
         cmp r2, r3
         bne mmu_load_bad_hdr
 
@@ -76,7 +77,7 @@ mmu_load:
         ldr r1, =mem
         mov r2, $65536
         mov r7, $3
-        swi $0
+        svc $0
 
         cmp r0, $0
         movgt r0, $0
@@ -88,8 +89,10 @@ mmu_load_bad_hdr:
 mmu_load_close:
         /* Close the file */
         mov r7, $6
-        swi $0
+        svc $0
 mmu_load_end:
+        add sp, $12
+
         ldmfd sp!, {r7-r8}
         mov pc, lr
 
