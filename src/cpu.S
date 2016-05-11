@@ -681,13 +681,15 @@ opRRA:   @0x1F
         b cpu_inst_r
 
 opJRNZn: @0x20
+        add r0, zpc, $1
+
         add zil, $8
         add zpc, $2
 
         tst zrf, $flZ
         bne cpu_inst_r
 
-        bl mmu_ri1
+        bl mmu_rb
         sxtab zpc, zpc, r0
 
         b cpu_inst_r
@@ -815,13 +817,15 @@ opDAA_end:
         b cpu_inst_r
 
 opJRZn:  @0x28
+        add r0, zpc, $1
+
         add zil, $8
         add zpc, $2
 
         tst zrf, $flZ
         beq cpu_inst_r
 
-        bl mmu_ri1
+        bl mmu_rb
         sxtab zpc, zpc, r0
 
         b cpu_inst_r
@@ -934,13 +938,15 @@ opCPL:   @0x2F
         b cpu_inst_r
 
 opJRNCn: @0x30
+        add r0, zpc, $1
+
         add zil, $8
         add zpc, $2
 
         tst zrf, $flC
         bne cpu_inst_r
 
-        bl mmu_ri1
+        bl mmu_rb
         sxtab zpc, zpc, r0
 
         b cpu_inst_r
@@ -1047,13 +1053,15 @@ opSCF:   @0x37
         b cpu_inst_r
 
 opJRCn: @0x38
+        add r0, zpc, $1
+
         add zil, $8
         add zpc, $2
 
         tst zrf, $flC
         beq cpu_inst_r
 
-        bl mmu_ri1
+        bl mmu_rb
         sxtab zpc, zpc, r0
 
         b cpu_inst_r
@@ -2767,8 +2775,9 @@ opPOPBC: @0xC1
         mov r0, zsp
         add zsp, $2
         bl mmu_rh
-        and zrb, r0, $0xFF
-        lsr zrc, r0, $0x08
+
+        lsr zrb, r0, $0x08
+        and zrc, r0, $0xFF
 
         add zil, $12
         add zpc, $1
@@ -3016,8 +3025,9 @@ opPOPDE: @0xD1
         mov r0, zsp
         add zsp, $2
         bl mmu_rh
-        and zrd, r0, $0xFF
-        lsr zre, r0, $0x08
+
+        lsr zrd, r0, $0x08
+        and zre, r0, $0xFF
 
         add zil, $12
         add zpc, $1
@@ -3223,8 +3233,9 @@ opPOPHL: @0xE1
         mov r0, zsp
         add zsp, $2
         bl mmu_rh
-        and zrh, r0, $0xFF
-        lsr zrl, r0, $0x08
+
+        lsr zrh, r0, $0x08
+        and zrl, r0, $0xFF
 
         add zil, $12
         add zpc, $1
