@@ -192,3 +192,5 @@ hex_print:
         add sp, $5
         ldmfd sp!, {r7}
         mov pc, lr
+
+        .end

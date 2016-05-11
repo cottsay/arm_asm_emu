@@ -26,3 +26,5 @@ _start_no_load:
 _start_exit:
         mov r7, $1
         svc $0
+
+        .end
