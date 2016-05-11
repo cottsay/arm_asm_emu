@@ -14,10 +14,12 @@
 
         .bss
 
-bswap:  .space 256
+bswpon: .space 1
+bswp:   .space 256
 mem:    .space 1
 mem1:   .space 1
 mem2:   .space 65536
+        .align
 
         .text
 
@@ -27,8 +29,71 @@ bios:   .byte 0xC3, 0xED, 0x00
         .byte 0x00, 0x01, 0xB0, 0x01, 0xC5, 0xF1, 0x01, 0x13
         .byte 0x00, 0xE0, 0x50
 
+mmu_do_bswp:
+        /* Copy bios swap to mem */
+        ldr r0, =bswp
+        ldr r1, =mem
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+
+        /* RI overflow */
+        sub r0, $0x0100
+        add r1, $0xFF00
+        ldrh r2, [r0]
+        strh r2, [r1]
+
+        ldr r0, =bswpon
+        mov r1, $0x00
+        str r1, [r0]
+
+        mov pc, lr
+
         .global mmu_init
 mmu_init:
+        /* Copy bios to mem */
+        ldr r0, =bios
+        ldr r1, =mem
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+
+        /* RI overflow */
+        sub r0, $0x0100
+        add r1, $0xFF00
+        ldrh r2, [r0]
+        strh r2, [r1]
+
+        ldr r0, =bswpon
+        mov r1, $0x01
+        str r1, [r0]
+
         mov pc, lr
 
         .global mmu_load
@@ -56,7 +121,7 @@ mmu_load:
 
         /* Copy data to bios swap */
         ldr r0, =mem
-        ldr r1, =bswap
+        ldr r1, =bswp
         ldmia r0!, {r2-r9}
         stmia r1!, {r2-r9}
         ldmia r0!, {r2-r9}
@@ -127,6 +192,14 @@ mmu_rh:
 mmu_wb:
         ldr r1, =mem
         strb r0, [r1, r0, lsr $0x10]
+        eor r1, r0, $0x0F5      @ Check if writing 0x01 to 0xFF50
+        eors r1, $0xF0000001
+        movne pc, lr
+
+        ldr r0, =bswpon
+        ldr r0, [r0]
+        cmp r0, $0x00
+        bne mmu_do_bswp
         mov pc, lr
 
         .global mmu_wh
