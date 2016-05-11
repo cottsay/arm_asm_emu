@@ -41,8 +41,8 @@ opcode_not_implemented:
 stat_print:
         stmfd sp!, {r5-r7, lr}
 
-        mov r5, r1
-        mov r6, r0
+        mov r5, r0
+        mov r6, r1
 
         mov r0, $1
         ldr r1, =smsg

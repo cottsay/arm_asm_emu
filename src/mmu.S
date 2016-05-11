@@ -89,44 +89,44 @@ mmu_load_end:
 
         .global mmu_ri
 mmu_ri:
-        ldr r1, =mem
-        ldrb r1, [r1, r11]
+        ldr r0, =mem
+        ldrb r0, [r0, r11]
         mov pc, lr
 
         .global mmu_ri1
 mmu_ri1:
-        ldr r1, =mem1
-        ldrb r1, [r1, r11]
+        ldr r0, =mem1
+        ldrb r0, [r0, r11]
         mov pc, lr
 
         .global mmu_ri2
 mmu_ri2:
-        ldr r1, =mem2
-        ldrb r1, [r1, r11]
+        ldr r0, =mem2
+        ldrb r0, [r0, r11]
         mov pc, lr
 
         .global mmu_rih1
 mmu_rih1:
-        ldr r1, =mem1
-        ldrh r1, [r1, r11]
+        ldr r0, =mem1
+        ldrh r0, [r0, r11]
         mov pc, lr
 
         .global mmu_rb
 mmu_rb:
         ldr r1, =mem
-        ldrb r1, [r1, r0]
+        ldrb r0, [r1, r0]
         mov pc, lr
 
         .global mmu_wb
 mmu_wb:
         ldr r1, =mem
-        strb r0, [r1, r0, lsr $16]
+        strb r0, [r1, r0, lsr $0x10]
         mov pc, lr
 
         .global mmu_rh
 mmu_rh:
         ldr r1, =mem
-        ldrh r1, [r1, r0]
+        ldrh r0, [r1, r0]
         mov pc, lr
 
         .global mmu_wh
