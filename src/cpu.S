@@ -48,13 +48,6 @@
 
         .include "reg.S"
 
-        .data
-
-Z80RS:  .space 52
-Z80RS_E:
-SYSRS:  .space 44
-SYSRS_E:
-
         .text
 
 ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA
@@ -124,12 +117,7 @@ ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA
 
         .global cpu_init
 cpu_init:
-        ldr r0, =SYSRS
-        stmea r0, {r4-r14}
-
         ldr zop, =ZOPS
-        mov zra, $0xFF
-        mov zrb, $0xFF
         mov zrc, $0
         mov zrd, $0
         mov zre, $0
@@ -137,93 +125,35 @@ cpu_init:
         mov zrh, $0
         mov zrl, $0
         mov zpc, $0
-        mov zil, $1
         mov zsp, $0xFF
 
-        ldr r1, =Z80RS
-        stmea r1, {r2-r14}
+        mov pc, lr
 
-        ldr r0, =SYSRS_E
-        ldmea r0, {r4-r13, pc}
-
-        .global cpu_dispatch
-cpu_dispatch:
-        ldr r0, =SYSRS
-        stmea r0, {r4-r14}
-
-        ldr r1, =Z80RS_E
-        ldmea r1, {r2-r14}
-
-        /* Z80 SYSTEM READY */
-        /* AT THIS POINT, THE ONLY PATH BACK TO LR */
-        /* IS THE SPECIAL 0xFD INSTRUCTION, opEXIT */
-
+        .global cpu_step
 cpu_step:
-        subs zil, $1
-        bpl cpu_step
-
-        @ fix PC overflow
-        bic zpc, $0x10000
-
-        /* DEBUG */
-        bl cpu_stat
-
         /* Load Instruction */
         bl mmu_ri
         ldrls pc, [zop, r0, lsl $2]
+
 cpu_inst_r:
-        b cpu_step
+        @ fix PC overflow
+        bic zpc, $0x10000
+        b cpu_ret
 
-cpu_stat:
-        ldr r1, =Z80RS
-        stmea r1, {r2-r14}
-
-        bl mmu_ri
-
-        ldr r1, =SYSRS_E
-        ldmea r1, {r4-r14}
-
-        ldr r1, =Z80RS
-        bl stat_print
-
-        ldr r1, =Z80RS_E
-        ldmea r1, {r2-r13, pc}
+        .ltorg    @ keep literal pool close
 
 /* SPECIAL INSTRUCTIONS */
 
 opNI:
-        /* MOVING BACK TO SYS */
-
-        ldr r1, =Z80RS
-        stmea r1, {r2-r14}
-
-        ldr r1, =SYSRS_E
-        ldmea r1, {r4-r14}
-
-        bl opcode_not_implemented
-
-        /* RESTORING Z80 REG */
-
-        ldr r1, =Z80RS_E
-        ldmea r1, {r2-r14}
-
         add zil, $1
         add zpc, $1
-        b cpu_inst_r
+        b cpu_exception
 
 opEXIT:
         mov r0, zra
+        add zil, $1
         add zpc, $1
-
-        /* MOVING BACK TO SYS */
-
-        ldr r1, =Z80RS
-        stmea r1, {r2-r14}
-
-        ldr r1, =SYSRS_E
-        ldmea r1, {r4-r13, pc}
-
-        .ltorg    @ keep literal pool close
+        b cpu_exit
 
 /* INSTRUCTIONS */
 

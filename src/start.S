@@ -9,21 +9,27 @@
         .text
 
         .global _start
+        .global dispatch_ret
 _start:
         /* Look for CLA */
         ldr r0, [sp]
         cmp r0, $1
-        ble _start_no_load
+        ble dispatch_run
         ldr r0, [sp, $8]
         bl mmu_load
         cmp r0, $0
-        bne _start_exit
+        bne dispatch_exit
 
-_start_no_load:
-        bl cpu_init
-        bl mmu_init
-        bl cpu_dispatch
-_start_exit:
+dispatch_run:
+        bl dispatch_enter
+        bl dispatch_init
+dispatch_ret:
+        bl dispatch_stat
+        b dispatch_step
+
+        .global dispatch_exit
+dispatch_exit:
+        bl dispatch_leave
         mov r7, $1
         svc $0
 

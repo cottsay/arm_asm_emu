@@ -16,22 +16,16 @@ emsg:   .ascii "\n--------------------------------------------------------------
         .align
 hexch:  .ascii "0123456789ABCDEF"
         .align
-nimsg:  .ascii ": This opcode is not implemented\n"
+nimsg:  .ascii "A CPU exception has occurred\n\n"
         .align
 
-        .global opcode_not_implemented
-opcode_not_implemented:
+        .global stat_cpu_exception
+stat_cpu_exception:
         stmfd sp!, {r7, lr}
-
-        cmp r0, $0x00FF
-        andgt r0, $0x00FF
-        orrge r0, $0xCB00
-
-        bl hex_print
 
         mov r0, $1
         ldr r1, =nimsg
-        mov r2, $33
+        mov r2, $30
         mov r7, $4
         svc $0
 
@@ -41,8 +35,7 @@ opcode_not_implemented:
 stat_print:
         stmfd sp!, {r5-r7, lr}
 
-        mov r5, r0
-        mov r6, r1
+        mov r6, r0
 
         mov r0, $1
         ldr r1, =smsg
@@ -96,12 +89,16 @@ stat_print:
         ldr r0, [r6, $40]
         bl hex_print
 
-        @ zpc
+        @ zsp
         ldr r0, [r6, $44]
         bl hex_print
 
         @ (zpc)
-        mov r0, r5
+        ldr r0, [r6, $36]
+        bl mmu_rh
+        orr r0, r0, lsl $0x10
+        lsr r0, $0x08
+        bic r0, $0xFF0000
         bl hex_print
 
         @ flags

@@ -16,6 +16,9 @@
 
         .bss
 
+scr:    .space 32
+scr_end:
+
 bswpon: .space 1
 bswp:   .space 256
 mem:    .space 1
@@ -32,6 +35,9 @@ bios:   .byte 0xC3, 0xED, 0x00
         .byte 0x00, 0xE0, 0x50
 
 mmu_do_bswp:
+        ldr r0, =scr
+        stmea r0, {r2-r9}
+
         /* Copy bios swap to mem */
         ldr r0, =bswp
         ldr r1, =mem
@@ -62,10 +68,16 @@ mmu_do_bswp:
         mov r1, $0x00
         str r1, [r0]
 
+        ldr r0, =scr_end
+        ldmea r0, {r2-r9}
+
         mov pc, lr
 
         .global mmu_init
 mmu_init:
+        ldr r0, =scr
+        stmea r0, {r2-r9}
+
         /* Copy bios to mem */
         ldr r0, =bios
         ldr r1, =mem
@@ -95,6 +107,9 @@ mmu_init:
         ldr r0, =bswpon
         mov r1, $0x01
         str r1, [r0]
+
+        ldr r0, =scr_end
+        ldmea r0, {r2-r9}
 
         mov pc, lr
 
