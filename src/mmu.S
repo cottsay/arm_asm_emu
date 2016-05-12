@@ -6,6 +6,8 @@
  * \author Scott K Logan
  ******************************************************************************/
 
+        .include "reg.S"
+
         .equ rom0, (mem)
         .equ rom1, (mem + 16384)
         .equ gram, (mem + 32768)
@@ -155,25 +157,25 @@ mmu_load_end:
         .global mmu_ri
 mmu_ri:
         ldr r0, =mem
-        ldrb r0, [r0, r11]
+        ldrb r0, [r0, zpc]
         mov pc, lr
 
         .global mmu_ri1
 mmu_ri1:
         ldr r0, =mem1
-        ldrb r0, [r0, r11]
+        ldrb r0, [r0, zpc]
         mov pc, lr
 
         .global mmu_ri2
 mmu_ri2:
         ldr r0, =mem2
-        ldrb r0, [r0, r11]
+        ldrb r0, [r0, zpc]
         mov pc, lr
 
         .global mmu_rih1
 mmu_rih1:
         ldr r0, =mem1
-        ldrh r0, [r0, r11]
+        ldrh r0, [r0, zpc]
         mov pc, lr
 
         .global mmu_rb
