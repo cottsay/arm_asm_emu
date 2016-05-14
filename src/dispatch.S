@@ -17,6 +17,8 @@ SYSRS_E:
 
         .text
 
+ZILINIT:.word 0x023C8000
+
         .global dispatch_enter
 dispatch_enter:
         ldr r1, =SYSRS
@@ -46,7 +48,8 @@ dispatch_init:
 
         mov lr, zil
 
-        mvn zil, $0xF6
+        ldr zil, =ZILINIT
+        ldr zil, [zil]
 
         mov pc, lr
 
@@ -62,13 +65,27 @@ dispatch_stat:
         mov pc, r0
 
         .global dispatch_step
+        .global timer_ret
+        .global gpu_ret
         .global cpu_ret
 dispatch_step:
-        add zil, $0xF7
+        /* Check GPU */
+        tst zil, $0x8000
+        bne gpu_step
+gpu_ret:
 
+        /* Check Timer */
+        ands r0, zil, $0xF8
+        beq timer_step
+timer_ret:
+
+        /* Check CPU */
         ands r0, zil, $0x07
         beq cpu_step
 cpu_ret:
+
+        /* Increment! */
+        add zil, $0xF7
 
         b dispatch_ret
 

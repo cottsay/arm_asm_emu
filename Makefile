@@ -17,7 +17,7 @@ all: $(LIBDIR)/emu.a $(BINDIR)/start
 $(OBJDIR)/%.o: $(SRCDIR)/%.S | $(OBJDIR)
 	$(AS) $(ASFLAGS) -o$@ $^
 
-$(LIBDIR)/emu.a: $(OBJDIR)/cpu.o $(OBJDIR)/dispatch.o $(OBJDIR)/mmu.o $(OBJDIR)/stat.o | $(LIBDIR)
+$(LIBDIR)/emu.a: $(OBJDIR)/cpu.o $(OBJDIR)/dispatch.o $(OBJDIR)/gpu.o $(OBJDIR)/mmu.o $(OBJDIR)/stat.o $(OBJDIR)/timer.o | $(LIBDIR)
 	$(AR) rcs $@ $^
 
 $(BINDIR)/start: $(OBJDIR)/start.o $(LIBDIR)/emu.a | $(BINDIR)
