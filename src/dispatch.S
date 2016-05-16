@@ -45,6 +45,7 @@ dispatch_init:
 
         bl cpu_init
         bl mmu_init
+        bl display_init
 
         mov lr, zil
 

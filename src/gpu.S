@@ -23,7 +23,18 @@ ziltbl:                  /*    -- Normal Transitions --    */
 gpu_step:
         /* Get the GPU mode alone */
         lsl lr, zil, $0x0E
-        lsr lr, $0x1E
+        lsrs lr, $0x1E
+
+        /* Display rendered line if ending HBlank */
+        bleq display_putline
+
+        /* Render a line if ending VRAM */
+        cmp lr, $0x03
+        bleq display_renderline
+
+        /* Get the GPU mode alone */
+        lsl lr, zil, $0x0E
+        lsrs lr, $0x1E
 
         /* Add the corresponding transition value from ziltbl */
         ldr r0, =ziltbl
@@ -43,6 +54,18 @@ gpu_step:
         cmp lr, $0x9A
         ldreq r0, [r0, $0x14]
         addeq zil, r0
+
+        /* Write line number to register */
+        orr r0, lr, $0xFF000000
+        orr r0, $0x00440000
+        bl mmu_wb
+
+        /* Write GPU mode to register */
+        lsl r0, zil, $0x0E
+        lsr r0, $0x1E
+        orr r0, $0xFF000000
+        orr r0, $0x00410000
+        bl mmu_wb
 
         b gpu_ret
 

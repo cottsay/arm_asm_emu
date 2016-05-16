@@ -24,7 +24,12 @@ dispatch_run:
         bl dispatch_enter
         bl dispatch_init
 dispatch_ret:
-        bl dispatch_stat
+        mov r0, $0x00000600
+        stupidloop:
+            subs r0, $0x01
+            bne stupidloop
+        @bl dispatch_stat
+
         b dispatch_step
 
         .global dispatch_exit
