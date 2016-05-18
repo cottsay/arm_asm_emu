@@ -95,7 +95,7 @@ cpu_ret:
 cpu_exception:
         bl dispatch_leave
 
-        ldr r1, =Z80RS
+        ldr r0, =Z80RS
         bl stat_print
         bl stat_cpu_exception
 

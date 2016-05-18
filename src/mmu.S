@@ -19,12 +19,11 @@
 scr:    .space 32
 scr_end:
 
-bswpon: .space 1
 bswp:   .space 256
 mem:    .space 1
 mem1:   .space 1
 mem2:   .space 65536
-        .align
+bswpon: .space 2
 
         .text
 
@@ -66,7 +65,7 @@ mmu_do_bswp:
 
         ldr r0, =bswpon
         mov r1, $0x00
-        str r1, [r0]
+        strb r1, [r0]
 
         ldr r0, =scr_end
         ldmea r0, {r2-r9}
@@ -106,7 +105,7 @@ mmu_init:
 
         ldr r0, =bswpon
         mov r1, $0x01
-        str r1, [r0]
+        strb r1, [r0]
 
         ldr r0, =scr_end
         ldmea r0, {r2-r9}
@@ -209,12 +208,12 @@ mmu_rh:
 mmu_wb:
         ldr r1, =mem
         strb r0, [r1, r0, lsr $0x10]
-        eor r1, r0, $0x0F5      @ Check if writing 0x01 to 0xFF50
+        eor r1, r0, $0xF500000  @ Check if writing 0x01 to 0xFF50
         eors r1, $0xF0000001
         movne pc, lr
 
         ldr r0, =bswpon
-        ldr r0, [r0]
+        ldrb r0, [r0]
         cmp r0, $0x00
         bne mmu_do_bswp
         mov pc, lr
