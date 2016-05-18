@@ -1,16 +1,15 @@
-CROSS=
 AS=$(CROSS)as
 AR=$(CROSS)ar
 LD=$(CROSS)ld
 
-SRCDIR=src
-OBJDIR=obj
-BINDIR=bin
-LIBDIR=lib
-INCDIR=inc
+SRCDIR:=src
+OBJDIR:=obj
+BINDIR:=bin
+LIBDIR:=lib
+INCDIR:=inc
 
-ASFLAGS=-g --warn --fatal-warnings -I$(INCDIR)
-LDFLAGS=--fatal-warnings
+ASFLAGS+=-g --warn --fatal-warnings -I$(INCDIR)
+LDFLAGS+=--fatal-warnings
 
 all: $(LIBDIR)/emu.a $(BINDIR)/start
 
