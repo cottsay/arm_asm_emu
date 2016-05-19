@@ -1,4 +1,5 @@
 /bin
+/inc/bios.rom
 /lib
 /obj
 */.*.swp

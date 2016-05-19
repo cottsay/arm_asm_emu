@@ -11,6 +11,10 @@ INCDIR:=inc
 ASFLAGS+=-g --warn --fatal-warnings -I$(INCDIR)
 LDFLAGS+=--fatal-warnings
 
+ifdef EMBED_BIOS
+ASFLAGS+=--defsym EMBED_BIOS=1
+endif
+
 all: $(LIBDIR)/emu.a $(BINDIR)/start
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.S | $(OBJDIR)
