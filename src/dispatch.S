@@ -78,6 +78,7 @@ dispatch_init:
         bl cpu_init
         bl mmu_init
         bl display_init
+        bl input_init
 
         mov lr, zil
 
@@ -98,8 +99,9 @@ dispatch_stat:
         mov pc, r0
 
         .global dispatch_step
-        .global timer_ret
         .global gpu_ret
+        .global timer_ret
+        .global input_ret
         .global cpu_ret
 dispatch_step:
         /* Check GPU */
@@ -111,6 +113,10 @@ gpu_ret:
         ands r0, zil, $0xF8
         beq timer_step
 timer_ret:
+
+        /* Check Input */
+        b input_step
+input_ret:
 
         /* Check CPU */
         ands r0, zil, $0x07

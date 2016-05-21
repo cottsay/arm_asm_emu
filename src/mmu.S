@@ -56,6 +56,8 @@ mem:    .space 1
 mem1:   .space 1
 mem2:   .space 65536
 bswpon: .space 2
+input:  .space 1
+        .align
 
         .text
 
@@ -101,6 +103,10 @@ mmu_do_bswp:
         strh r2, [r1]
 
         ldr r0, =bswpon
+        mov r1, $0x00
+        strb r1, [r0]
+
+        ldr r0, =input
         mov r1, $0x00
         strb r1, [r0]
 
@@ -245,7 +251,17 @@ mmu_rh:
 mmu_wb:
         ldr r1, =mem
         strb r0, [r1, r0, lsr $0x10]
-        eor r1, r0, $0xF500000  @ Check if writing 0x01 to 0xFF50
+
+        /* Check for special registers */
+        cmp r0, $0xFF000000
+        movlo pc, lr
+
+        /* Check if writing to FF00 */
+        tst r0, $0xFF0000
+        beq mmu_input_compute
+
+        /* Check if writing 0x01 to 0xFF50 */
+        eor r1, r0, $0xF500000
         eors r1, $0xF0000001
         movne pc, lr
 
@@ -260,6 +276,36 @@ mmu_wh:
         ldr r1, =mem
         add r1, r0, lsr $0x10
         strh r0, [r1]
+        mov pc, lr
+
+mmu_input_compute:
+        ldr r1, =input
+        ldrb r1, [r1]
+
+        tst r0, $0x20
+        orrne r0, r1, lsr $0x04
+
+        tst r0, $0x10
+        andne r1, $0x07
+        orrne r0, r1
+
+        ldr r1, =mem
+        strb r0, [r1, r0, lsr $0x10]
+        mov pc, lr
+
+        .global mmu_input_update
+mmu_input_update:
+        ldr r1, =input
+        ldrb r1, [r1]
+
+        bic r1, r0, lsr $0x08
+
+        and r0, $0xFF
+        orr r1, r0
+
+        ldr r0, =input
+        strb r1, [r0]
+
         mov pc, lr
 
         .end
