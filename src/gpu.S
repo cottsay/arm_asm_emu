@@ -99,6 +99,13 @@ gpu_step:
         orr r0, $0x00410000
         bl mmu_wb
 
+        /* Trigger interrupt on VBlank */
+        lsl r0, zil, $0x0E
+        lsr r0, $0x1E
+        cmp r0, $0x01
+        moveq r0, $intV
+        bleq mmu_int
+
         b gpu_ret
 
         .end

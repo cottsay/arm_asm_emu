@@ -46,6 +46,9 @@
         .equ eram, (mem + 40960)
         .equ wram, (mem + 49152)
 
+        .equ intf, (mem + 0xFF0F)
+        .equ inte, (mem + 0xFFFF)
+
         .bss
 
 scr:    .space 32
@@ -235,6 +238,12 @@ mmu_rih1:
         ldrh r0, [r0, zpc]
         mov pc, lr
 
+        .global mmu_rif
+mmu_rif:
+        ldr r0, =intf
+        ldrb r0, [r0]
+        mov pc, lr
+
         .global mmu_rb
 mmu_rb:
         ldr r1, =mem
@@ -259,6 +268,12 @@ mmu_wb:
         /* Check if writing to FF00 */
         tst r0, $0xFF0000
         beq mmu_input_compute
+
+        /* Check if writing to FFFF */
+        cmn r0, $0x10000
+        andcs r0, $intM
+        biccs zil, $(intM << intO)
+        orrcs zil, r0, lsl $intO
 
         /* Check if writing 0x01 to 0xFF50 */
         eor r1, r0, $0xF500000
@@ -306,6 +321,24 @@ mmu_input_update:
         ldr r0, =input
         strb r1, [r0]
 
+        mov pc, lr
+
+        .global mmu_int
+mmu_int:
+        ldr r1, =intf
+        ldrb r1, [r1]
+        orr r0, r1
+        ldr r1, =intf
+        strb r0, [r1]
+        mov pc, lr
+
+        .global mmu_sint
+mmu_sint:
+        ldr r1, =intf
+        ldrb r1, [r1]
+        bic r0, r1, r0
+        ldr r1, =intf
+        strb r0, [r1]
         mov pc, lr
 
         .end

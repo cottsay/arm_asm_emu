@@ -38,6 +38,8 @@
  * \author Scott K Logan
  ******************************************************************************/
 
+        .include "reg.S"
+
         .bss
 
 ev:
@@ -138,6 +140,9 @@ input_step:
         lsleq r0, $0x08
 
         bl mmu_input_update
+
+        movne r0, $intJ
+        blne mmu_int
 
 input_step_ret:
         ldmea r3, {r1-r3, r7}

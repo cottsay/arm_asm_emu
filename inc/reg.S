@@ -56,4 +56,11 @@ zsp     .req sp
         .equ flH, 0x20
         .equ flC, 0x10
 
-
+        .equ intV, 0x01
+        .equ intL, 0x02
+        .equ intT, 0x04
+        .equ intS, 0x08
+        .equ intJ, 0x10
+        .equ intE, 0x20
+        .equ intM, 0x1F
+        .equ intO, 0x1A

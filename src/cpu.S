@@ -161,8 +161,53 @@ cpu_init:
 
         mov pc, lr
 
+cpu_int:
+        bic zil, $(intE << intO)        @ Disable interrupts
+
+        sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
+        orr r1, zpc, zsp, lsl $0x10
+        mov zpc, r0
+        mov r0, r1
+        bl mmu_wh
+
+        mov r0, zpc
+
+        /* Figure out which interrupt to service */
+        tst r0, $intV
+        movne r0, $intV
+        movne zpc, $0x40
+
+        tst r0, $intL
+        movne r0, $intL
+        movne zpc, $0x48
+
+        tst r0, $intT
+        movne r0, $intT
+        movne zpc, $0x50
+
+        tst r0, $intS
+        movne r0, $intS
+        movne zpc, $0x58
+
+        tst r0, $intJ
+        movne r0, $intJ
+        movne zpc, $0x60
+
+        bl mmu_sint
+
+        b cpu_ret
+
         .global cpu_step
 cpu_step:
+        /* Process interrupts */
+        tst zil, $(intE << intO)
+        tstne zil, $(intM << intO)
+        blne mmu_rif
+        andnes r0, zil, lsr $intO
+        bne cpu_int
+
         /* Load Instruction */
         bl mmu_ri
         ldrls pc, [zop, r0, lsl $2]
@@ -3078,7 +3123,7 @@ opRETC:  @0xD8
         b cpu_inst_r
 
 opRETI:  @0xD9
-        @ TODO: Enable interrupts
+        orr zil, $(intE << intO)
 
         mov r0, zsp
         bl mmu_rh
@@ -3330,7 +3375,7 @@ opLDAFC: @0xF2
         b cpu_inst_r
 
 opDI:    @0xF3
-        @ TODO: Disable interrupts
+        bic zil, $(intE << intO)        @ Disable interrupts
 
         add zil, $1
         add zpc, $1
@@ -3419,7 +3464,7 @@ opLDAnn: @0xFA
         b cpu_inst_r
 
 opEI:    @0xFB
-        @ TODO: Enable interrupts
+        orr zil, $(intE << intO)        @ Enable interrupts
 
         add zil, $1
         add zpc, $1
