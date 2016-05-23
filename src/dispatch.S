@@ -79,6 +79,7 @@ dispatch_init:
         bl mmu_init
         bl display_init
         bl input_init
+        bl timer_init
 
         mov lr, zil
 
@@ -110,7 +111,7 @@ dispatch_step:
 gpu_ret:
 
         /* Check Timer */
-        ands r0, zil, $0xF8
+        ands r0, zil, $0x18
         beq timer_step
 timer_ret:
 

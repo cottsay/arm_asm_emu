@@ -100,9 +100,9 @@ gpu_step:
         bl mmu_wb
 
         /* Trigger interrupt on VBlank */
-        lsl r0, zil, $0x0E
-        lsr r0, $0x1E
-        cmp r0, $0x01
+        lsl lr, zil, $0x06
+        lsr lr, $0x18
+        cmp lr, $0x90
         moveq r0, $intV
         bleq mmu_int
 

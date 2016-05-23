@@ -40,11 +40,73 @@
 
         .include "reg.S"
 
+        .bss
+
+tadd:   .space 4
+
         .text
+
+        .global timer_init
+timer_init:
+        mov r0, $0x00
+        ldr r1, =tadd
+        str r0, [r1]
+
+        mov pc, lr
 
         .global timer_step
 timer_step:
-        add zil, $0x100
+        ldr r0, =tadd
+        ldr r1, [r0]
+        add r1, $0x01
+        str r1, [r0]
+
+        bl mmu_rt
+
+        /* Divider */
+        tst r1, $0x0F
+        roreq r0, $0x08
+        addeq r0, $0x01000000
+        roreq r0, $0x0C
+
+        /* Timer */
+        tst r0, $0x04000000
+        bleq mmu_wt
+        beq timer_step_stopped
+
+        /* Account for the control speed */
+        lsl r1, $0x1A
+        cmp r0, $0x05000000
+        lsrhs r1, $0x1A
+        cmp r0, $0x06000000
+        rorhs r1, $0x02
+        cmp r0, $0x07000000
+        rorhs r1, $0x02
+        lsrs r1, $0x1A
+
+        /* Possibly increment the counter */
+        roreq r0, $0x10
+        addeq r0, $0x01000000
+        roreq r0, $0x10
+
+        /* If counter overflows, reset it to modulo */
+        tsteq r0, $0xFF00
+        andeq r1, r0, $0xFF0000
+        orreq r0, r1, lsr $0x08
+
+        bl mmu_wt
+
+        /* Also trigger the timer interrupt */
+        moveq r0, $intT
+        bleq mmu_int
+
+timer_step_stopped:
+        /* TODO: This really needs to be re-worked in light of the */
+        /* fact that bits 5-7 aren't used */
+        /* Only do this if all 5 bits were 0 */
+
+        tst zil, $0xF1
+        addeq zil, $0x100
         b timer_ret
 
         .end

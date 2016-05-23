@@ -46,6 +46,7 @@
         .equ eram, (mem + 40960)
         .equ wram, (mem + 49152)
 
+        .equ timr, (mem + 0xFF04)
         .equ intf, (mem + 0xFF0F)
         .equ inte, (mem + 0xFFFF)
 
@@ -244,6 +245,12 @@ mmu_rif:
         ldrb r0, [r0]
         mov pc, lr
 
+        .global mmu_rt
+mmu_rt:
+        ldr r0, =timr
+        ldr r0, [r0]
+        mov pc, lr
+
         .global mmu_rb
 mmu_rb:
         ldr r1, =mem
@@ -291,6 +298,12 @@ mmu_wh:
         ldr r1, =mem
         add r1, r0, lsr $0x10
         strh r0, [r1]
+        mov pc, lr
+
+        .global mmu_wt
+mmu_wt:
+        ldr r1, =timr
+        str r0, [r1]
         mov pc, lr
 
 mmu_input_compute:
