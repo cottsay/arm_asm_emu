@@ -40,25 +40,19 @@
 
         .include "reg.S"
 
-        .equ rom0, (mem)
-        .equ rom1, (mem + 16384)
-        .equ gram, (mem + 32768)
-        .equ eram, (mem + 40960)
-        .equ wram, (mem + 49152)
-
+        .equ inpt, (mem + 0xFF00)
         .equ timr, (mem + 0xFF04)
         .equ intf, (mem + 0xFF0F)
         .equ inte, (mem + 0xFFFF)
 
         .bss
 
-bswp:   .space 256
-mem:    .space 1
-mem1:   .space 1
-mem2:   .space 65536
-bswpon: .space 2
+mem:    .space 65536
 input:  .space 1
         .align
+
+readop: .space 16
+writeop:.space 16
 
         .text
 
@@ -73,88 +67,60 @@ bios:   .ifdef EMBED_BIOS
         .byte 0x00, 0xE0, 0x50
         .endif
 
-mmu_do_bswp:
-        stmfd sp!, {r2-r9}
-
-        /* Copy bios swap to mem */
-        ldr r0, =bswp
-        ldr r1, =mem
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-
-        /* RI overflow */
-        sub r0, $0x0100
-        add r1, $0xFF00
-        ldrh r2, [r0]
-        strh r2, [r1]
-
-        ldr r0, =bswpon
-        mov r1, $0x00
-        strb r1, [r0]
-
-        ldr r0, =input
-        mov r1, $0x00
-        strb r1, [r0]
-
-        ldmfd sp!, {r2-r9}
-        mov pc, lr
-
         .global mmu_init
 mmu_init:
-        stmfd sp!, {r2-r9}
+        stmfd sp!, {r2-r4}
 
-        /* Copy bios to mem */
-        ldr r0, =bios
-        ldr r1, =mem
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
+        /* Set up the MMU read operation map */
+        @ 0x0000 - 0x3FFF
+        mov r0, $(ropBIOS - ropb)
+        orr r0, $((ropMEM - ropb) << 8)
+        orr r0, $((ropMEM - ropb) << 16)
+        orr r0, $((ropMEM - ropb) << 24)
 
-        /* RI overflow */
-        sub r0, $0x0100
-        add r1, $0xFF00
-        ldrh r2, [r0]
-        strh r2, [r1]
+        @ 0x4000 - 0x7FFF
+        mov r1, $(ropMEM - ropb)
+        orr r1, r1, lsl $0x08
+        orr r1, r1, lsl $0x10
 
-        ldr r0, =bswpon
-        mov r1, $0x01
-        strb r1, [r0]
+        @ 0x8000 - 0xBFFF
+        mov r2, r1
 
-        ldmfd sp!, {r2-r9}
+        @ 0xC000 - 0xFFFF
+        mov r3, r1
+
+        ldr r4, =readop
+        stmea r4, {r0-r3}
+
+        /* Set up the MMU write operation map */
+        @ 0x0000 - 0x3FFF
+        mov r0, $(wopNOP - wopb)
+        orr r0, r0, lsl $0x08
+        orr r0, r0, lsl $0x10
+
+        @ 0x4000 - 0x7FFF
+        mov r1, r0
+
+        @ 0x8000 - 0xBFFF
+        mov r2, $(wopMEM - wopb)
+        orr r2, r2, lsl $0x08
+        orr r2, r2, lsl $0x10
+
+        @ 0xC000 - 0xFFFF
+        mov r3, $(wopWRAME - wopb)
+        orr r3, r3, lsl $0x10
+        orr r3, $((wopWRAMO - wopb) << 8)
+        orr r3, $((wopMISC - wopb) << 24)
+
+        ldr r4, =writeop
+        stmea r4, {r0-r3}
+
+        ldmfd sp!, {r2-r4}
         mov pc, lr
 
         .global mmu_load
 mmu_load:
-        stmfd sp!, {r2-r9}
-
-        sub sp, $12
+        stmfd sp!, {r2, r7}
 
         /* Open the file */
         mov r1, $0
@@ -166,70 +132,43 @@ mmu_load:
 
         /* Read the program */
         ldr r1, =mem
-        mov r2, $65536
+        mov r2, $0x8000
         mov r7, $3
         svc $0
 
         cmp r0, $0
-        ble mmu_load_close
+        movhi r0, $0
 
-        /* Copy data to bios swap */
-        ldr r0, =mem
-        ldr r1, =bswp
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-        ldmia r0!, {r2-r9}
-        stmia r1!, {r2-r9}
-
-        mov r0, $0
-
-mmu_load_close:
         /* Close the file */
         mov r7, $6
         svc $0
 
 mmu_load_end:
-        add sp, $12
-
-        ldmfd sp!, {r2-r9}
+        ldmfd sp!, {r2, r7}
         mov pc, lr
 
         .global mmu_ri
 mmu_ri:
-        ldr r0, =mem
-        ldrb r0, [r0, zpc, lsr $0x10]
-        mov pc, lr
+        lsr r0, zpc, $0x10
+        b mmu_rb
 
         .global mmu_ri1
 mmu_ri1:
-        ldr r0, =mem1
-        ldrb r0, [r0, zpc, lsr $0x10]
-        mov pc, lr
+        add r0, zpc, $0x00010000
+        lsr r0, $0x10
+        b mmu_rb
 
         .global mmu_ri2
 mmu_ri2:
-        ldr r0, =mem2
-        ldrb r0, [r0, zpc, lsr $0x10]
-        mov pc, lr
+        add r0, zpc, $0x00020000
+        lsr r0, $0x10
+        b mmu_rb
 
         .global mmu_rih1
 mmu_rih1:
-        ldr r0, =mem1
-        lsr r1, zpc, $0x10
-        ldrh r0, [r0, r1]
-        mov pc, lr
+        add r0, zpc, $0x00010000
+        lsr r0, $0x10
+        b mmu_rh
 
         .global mmu_rif
 mmu_rif:
@@ -243,74 +182,34 @@ mmu_rt:
         ldr r0, [r0]
         mov pc, lr
 
-        .global mmu_rb
-mmu_rb:
-        ldr r1, =mem
-        ldrb r0, [r1, r0]
-        mov pc, lr
-
         .global mmu_rh
 mmu_rh:
-        ldr r1, =mem
-        ldrh r0, [r1, r0]
-        mov pc, lr
-
-        .global mmu_wb
-mmu_wb:
-        ldr r1, =mem
-        strb r0, [r1, r0, lsr $0x10]
-
-        /* Check for special registers */
-        cmp r0, $0xFF000000
-        movlo pc, lr
-
-        /* Check if writing to FF00 */
-        tst r0, $0xFF0000
-        beq mmu_input_compute
-
-        /* Check if writing to FFFF */
-        cmn r0, $0x10000
-        andcs r0, $intM
-        biccs zil, $(intM << intO)
-        orrcs zil, r0, lsl $intO
-
-        /* Check if writing 0x01 to 0xFF50 */
-        eor r1, r0, $0xF500000
-        eors r1, $0xF0000001
-        movne pc, lr
-
-        ldr r0, =bswpon
-        ldrb r0, [r0]
-        cmp r0, $0x00
-        bne mmu_do_bswp
-        mov pc, lr
+        stmfd sp!, {r2, lr}
+        add r2, r0, $0x00000001
+        bl mmu_rb
+        mov r1, r0
+        bic r0, r2, $0x00FF0000
+        mov r2, r1
+        bl mmu_rb
+        orr r0, r2, r0, lsl $0x08
+        ldmfd sp!, {r2, pc}
 
         .global mmu_wh
 mmu_wh:
-        ldr r1, =mem
-        add r1, r0, lsr $0x10
-        strh r0, [r1]
-        mov pc, lr
+        stmfd sp!, {r2, lr}
+        add r2, r0, $0x00010000
+        bl mmu_wb
+        lsr r0, r2, $0x10
+        and r2, $0x0000FF00
+        orr r0, r2, lsl $0x08
+        ror r0, $0x10
+        bl mmu_wb
+        ldmfd sp!, {r2, pc}
 
         .global mmu_wt
 mmu_wt:
         ldr r1, =timr
         str r0, [r1]
-        mov pc, lr
-
-mmu_input_compute:
-        ldr r1, =input
-        ldrb r1, [r1]
-
-        tst r0, $0x20
-        orrne r0, r1, lsr $0x04
-
-        tst r0, $0x10
-        andne r1, $0x07
-        orrne r0, r1
-
-        ldr r1, =mem
-        strb r0, [r1, r0, lsr $0x10]
         mov pc, lr
 
         .global mmu_input_update
@@ -343,6 +242,182 @@ mmu_sint:
         ldrb r1, [r1]
         bic r0, r1, r0
         ldr r1, =intf
+        strb r0, [r1]
+        mov pc, lr
+
+        /* MMU BASE OPERATION DISPATCH */
+
+        .global mmu_rb
+mmu_rb:
+        ldr r1, =readop
+        ldrb r1, [r1, r0, lsr $0x0C]
+        add pc, r1
+        nop
+ropb:
+
+        .global mmu_wb
+mmu_wb:
+        ldr r1, =writeop
+        ldrb r1, [r1, r0, lsr $0x1C]
+        add pc, r1
+        nop
+wopb:
+
+        /* MMU OPERATIONS */
+
+        /*!
+         * \brief Always read zero
+         */
+ropNOP:
+        mov r0, $0x00
+        mov pc, lr
+
+        /*!
+         * \brief Do nothing
+         */
+wopNOP:
+        mov pc, lr
+
+        /*!
+         * \brief Read from BIOS if less than 256, otherwise from ROM
+         *
+         * During initialization, this routine is used to read BIOS instructions
+         * from the special BIOS area. After writing to 0xFF50, this routine is
+         * replaced with ropMEM, and is never used again.
+         */
+ropBIOS:
+        cmp r0, $0x0100
+        ldrhs r1, =mem
+        ldrlo r1, =bios
+        ldrb r0, [r1, r0]
+        mov pc, lr
+
+        /*!
+         * \brief Generic memory read
+         *
+         * Reads normal memory from the base offset
+         */
+ropMEM:
+        ldr r1, =mem
+        ldrb r0, [r1, r0]
+        mov pc, lr
+
+        /*!
+         * \brief Generic memory write
+         */
+wopMEM:
+        ldr r1, =mem
+        strb r0, [r1, r0, lsr $0x10]
+        mov pc, lr
+
+        /*!
+         * \brief Special write routines for working ram
+         *
+         * Since working ram (0xC000-0xDFFF) mirrors the first 7680 bytes in
+         * in 0xE000-0xFD00, we need to mirror the write operations. This will
+         * make the read operations more efficient.
+         */
+wopWRAME:
+        ldr r1, =mem
+        strb r0, [r1, r0, lsr $0x10]
+        eor r0, $0x20000000
+        strb r0, [r1, r0, lsr $0x10]
+        mov pc, lr
+
+wopWRAMO:
+        ldr r1, =mem
+        strb r0, [r1, r0, lsr $0x10]
+        cmp r0, $0xDE000000
+        movhs pc, lr
+        orr r0, $0x20000000
+        strb r0, [r1, r0, lsr $0x10]
+        mov pc, lr
+
+        /*!
+         * \brief Special write routine for WRAM, I/O, int, etc.
+         */
+wopMISC:
+        @ Check for WRAM mirror
+        cmp r0, $0xFE000000
+        blo wopWRAME
+
+        and r1, r0, $0x0FF00000
+
+        @ Check for OAM
+        cmp r1, $0x0EA00000
+        blo wopMEM
+
+        @ Check for unusable FEA0-FEFF
+        cmp r1, $0x0F000000
+        blo wopNOP
+
+        and r1, r0, $0x00FF0000
+
+        @ Check for INTE
+        cmp r1, $0x00FF0000
+        bhs wopINTE
+
+        @ Check for HRAM
+        cmp r1, $0x00800000
+        bhs wopMEM
+
+        cmp r1, $0x00500000
+        beq wopBSWP
+
+        @ Fall back to simple write
+        b wopMEM
+
+        /*!
+         * \brief Special write routine for the joy pad input register
+         *
+         * The value when reading this register depends on the last value
+         * written to it, so we update it whenever it is written to.
+         */
+wopINPT:
+        bic r0, $0xCF
+
+        ldr r1, =input
+        ldrb r1, [r1]
+
+        tst r0, $0x20
+        orrne r0, r1, lsr $0x04
+
+        tst r0, $0x10
+        andne r1, $0x0F
+        orrne r0, r1
+
+        ldr r1, =inpt
+        strb r0, [r1]
+        mov pc, lr
+
+        /*!
+         * \brief Special write routine for the BIOS swap register
+         *
+         * When the BIOS writes to this register, it becomes inaccessible
+         * and the ROM is accessed in it's place.
+         */
+wopBSWP:
+        lsl r1, r0, $0x10
+        cmp r1, $0x00010000
+        movne pc, lr
+
+        mov r0, $(ropMEM - ropb)
+        ldr r1, =readop
+        strb r0, [r1]
+
+        mov pc, lr
+
+        /*!
+         * \brief Special write routine for INTE
+         *
+         * The interrupt enable bits are mirrored in the zil register for easy
+         * access since they are read almost every single cycle.
+         */
+wopINTE:
+        and r1, r0, $intM
+        bic zil, $(intM << intO)
+        orr zil, r1, lsl $intO
+        ldr r1, =inte
         strb r0, [r1]
         mov pc, lr
 
