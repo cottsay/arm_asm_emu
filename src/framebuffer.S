@@ -186,7 +186,8 @@ display_renderline:
         add r8, r2
 
         /* Put map X offset in r3, put column within tile in r4 */
-        and r4, r3, $0x03
+        and r4, r3, $0x07
+        lsl r4, $0x01
         lsr r3, $0x03
 
         /* BEGIN LOAD */
@@ -200,19 +201,20 @@ display_renderline:
         eoreq r0, $0x80
         lsl r0, $0x04
 
-        add r0, r8
-        bl mmu_rh
+        add r2, r0, r8
 
         /* Interleave the bits */
         ldr r9, =morton
-        and r1, r0, $0xFF
-        lsl r1, $0x01
-        ldrh r1, [r9, r1]
+        mov r0, r2
+        bl mmu_rb
+        lsl r0, $0x01
+        ldrh r5, [r9, r0]
 
-        lsr r0, $0x08
+        add r0, r2, $0x01
+        bl mmu_rb
         lsl r0, $0x01
         ldrh r0, [r9, r0]
-        orr r0, r1, lsl $0x01
+        orr r0, r5, lsl $0x01
 
         /* Discard unneeded bits of this cell, store running cells in r12 */
         lsr r12, r0, r4
@@ -239,18 +241,19 @@ display_rendertile:
         eoreq r0, $0x80
         lsl r0, $0x04
 
-        add r0, r8
-        bl mmu_rh
+        add r2, r0, r8
 
         /* Interleave the bits */
-        and r1, r0, $0xFF
-        lsl r1, $0x01
-        ldrh r1, [r9, r1]
+        mov r0, r2
+        bl mmu_rb
+        lsl r0, $0x01
+        ldrh r5, [r9, r0]
 
-        lsr r0, $0x08
+        add r0, r2, $0x01
+        bl mmu_rb
         lsl r0, $0x01
         ldrh r0, [r9, r0]
-        orr r0, r1, lsl $0x01
+        orr r0, r5, lsl $0x01
 
         /* OR-in this tile after the previous tile's last bit */
         orr r12, r0, lsl r4

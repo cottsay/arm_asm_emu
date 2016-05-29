@@ -667,17 +667,16 @@ opRRA:   @0x1F
         b cpu_inst_r
 
 opJRNZn: @0x20
-        add r0, zpc, $1
-
         add zil, $2
-        add zpc, $2
 
         tst zrf, $flZ
+        addne zpc, $2
         bne cpu_inst_r
 
-        bl mmu_rb
+        bl mmu_ri1
         lsl r0, $0x18
         add zpc, r0, asr $0x18
+        add zpc, $2
 
         b cpu_inst_r
 
@@ -803,17 +802,16 @@ opDAA_end:
         b cpu_inst_r
 
 opJRZn:  @0x28
-        add r0, zpc, $1
-
         add zil, $2
-        add zpc, $2
 
         tst zrf, $flZ
+        addeq zpc, $2
         beq cpu_inst_r
 
-        bl mmu_rb
+        bl mmu_ri1
         lsl r0, $0x18
         add zpc, r0, asr $0x18
+        add zpc, $2
 
         b cpu_inst_r
 
@@ -916,6 +914,7 @@ opLDLn:  @0x2E
 
 opCPL:   @0x2F
         mvn zra, zra
+        and zra, $0xFF
         orr zrf, $flN
         orr zrf, $flH
 
@@ -924,17 +923,16 @@ opCPL:   @0x2F
         b cpu_inst_r
 
 opJRNCn: @0x30
-        add r0, zpc, $1
-
         add zil, $2
-        add zpc, $2
 
         tst zrf, $flC
+        addne zpc, $2
         bne cpu_inst_r
 
-        bl mmu_rb
+        bl mmu_ri1
         lsl r0, $0x18
         add zpc, r0, asr $0x18
+        add zpc, $2
 
         b cpu_inst_r
 
@@ -1041,17 +1039,16 @@ opSCF:   @0x37
         b cpu_inst_r
 
 opJRCn: @0x38
-        add r0, zpc, $1
-
         add zil, $2
-        add zpc, $2
 
         tst zrf, $flC
+        addeq zpc, $2
         beq cpu_inst_r
 
-        bl mmu_rb
+        bl mmu_ri1
         lsl r0, $0x18
         add zpc, r0, asr $0x18
+        add zpc, $2
 
         b cpu_inst_r
 
@@ -2755,7 +2752,6 @@ opRETNZ: @0xC0
 
         add zsp, $2
         bic zsp, $0x00FF0000
-        bic zsp, $0xFF000000
 
         mov zpc, r0
 
@@ -2763,8 +2759,10 @@ opRETNZ: @0xC0
 
 opPOPBC: @0xC1
         mov r0, zsp
-        add zsp, $2
         bl mmu_rh
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
 
         lsr zrb, r0, $0x08
         and zrc, r0, $0xFF
@@ -2793,15 +2791,15 @@ opJPnn:  @0xC3
 
 opCNZnn: @0xC4
         add zil, $3
-        add zpc, $3
 
         tst zrf, $flZ
+        addne zpc, $3
         bne cpu_inst_r
 
         bl mmu_rih1
 
-        bic r1, zpc, $0x00FF0000
-        bic r1, $0xFF000000
+        add r1, zpc, $0x03
+        bic r1, $0x00FF0000
         mov zpc, r0
 
         sub zsp, $2
@@ -2814,6 +2812,8 @@ opCNZnn: @0xC4
 
 opPUSBC: @0xC5
         sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
         orr r0, zrc, zrb, lsl $0x08
         orr r0, r0, zsp, lsl $0x10
         bl mmu_wh
@@ -2845,9 +2845,8 @@ opAAn:   @0xC6
         b cpu_inst_r
 
 opR00H:  @0xC7
-        add r0, zpc, $3
+        add r0, zpc, $1
         bic r0, $0x00FF0000
-        bic r0, $0xFF000000
 
         sub zsp, $2
         bic zsp, $0x00FF0000
@@ -2871,7 +2870,6 @@ opRETZ:  @0xC8
 
         add zsp, $2
         bic zsp, $0x00FF0000
-        bic zsp, $0xFF000000
 
         mov zpc, r0
 
@@ -2883,7 +2881,6 @@ opRET:   @0xC9
 
         add zsp, $2
         bic zsp, $0x00FF0000
-        bic zsp, $0xFF000000
 
         mov zpc, r0
 
@@ -2916,13 +2913,14 @@ opCBP:   @ 0xCB
 
 opCZnn:  @0xCC
         add zil, $3
-        add zpc, $3
 
         tst zrf, $flZ
+        addeq zpc, $3
         beq cpu_inst_r
 
         bl mmu_rih1
 
+        add zpc, $3
         bic r1, zpc, $0x00FF0000
         bic r1, $0xFF000000
         mov zpc, r0
@@ -2979,9 +2977,8 @@ opAcAn:  @0xCE
         b cpu_inst_r
 
 opR08H:  @0xCF
-        add r0, zpc, $3
+        add r0, zpc, $1
         bic r0, $0x00FF0000
-        bic r0, $0xFF000000
 
         sub zsp, $2
         bic zsp, $0x00FF0000
@@ -3005,7 +3002,6 @@ opRETNC: @0xD0
 
         add zsp, $2
         bic zsp, $0x00FF0000
-        bic zsp, $0xFF000000
 
         mov zpc, r0
 
@@ -3013,8 +3009,10 @@ opRETNC: @0xD0
 
 opPOPDE: @0xD1
         mov r0, zsp
-        add zsp, $2
         bl mmu_rh
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
 
         lsr zrd, r0, $0x08
         and zre, r0, $0xFF
@@ -3036,15 +3034,15 @@ opJPNCnn:@0xD2
 
 opCNCnn: @0xD4
         add zil, $3
-        add zpc, $3
 
         tst zrf, $flC
+        addne zpc, $3
         bne cpu_inst_r
 
         bl mmu_rih1
 
-        bic r1, zpc, $0x00FF0000
-        bic r1, $0xFF000000
+        add r1, zpc, $3
+        bic r1, $0x00FF0000
         mov zpc, r0
 
         sub zsp, $2
@@ -3057,6 +3055,8 @@ opCNCnn: @0xD4
 
 opPUSDE: @0xD5
         sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
         orr r0, zre, zrd, lsl $0x08
         orr r0, r0, zsp, lsl $0x10
         bl mmu_wh
@@ -3090,9 +3090,8 @@ opSAn:   @0xD6
         b cpu_inst_r
 
 opR10H:  @0xD7
-        add r0, zpc, $3
+        add r0, zpc, $1
         bic r0, $0x00FF0000
-        bic r0, $0xFF000000
 
         sub zsp, $2
         bic zsp, $0x00FF0000
@@ -3116,7 +3115,6 @@ opRETC:  @0xD8
 
         add zsp, $2
         bic zsp, $0x00FF0000
-        bic zsp, $0xFF000000
 
         mov zpc, r0
 
@@ -3130,7 +3128,6 @@ opRETI:  @0xD9
 
         add zsp, $2
         bic zsp, $0x00FF0000
-        bic zsp, $0xFF000000
 
         mov zpc, r0
 
@@ -3150,15 +3147,15 @@ opJPCnn: @0xDA
 
 opCCnn:  @0xDC
         add zil, $3
-        add zpc, $3
 
         tst zrf, $flC
+        addeq zpc, $3
         beq cpu_inst_r
 
         bl mmu_rih1
 
-        bic r1, zpc, $0x00FF0000
-        bic r1, $0xFF000000
+        add r1, zpc, $3
+        bic r1, $0x00FF0000
         mov zpc, r0
 
         sub zsp, $2
@@ -3195,9 +3192,8 @@ opScAn:  @0xDE
         b cpu_inst_r
 
 opR18H:  @0xDF
-        add r0, zpc, $3
+        add r0, zpc, $1
         bic r0, $0x00FF0000
-        bic r0, $0xFF000000
 
         sub zsp, $2
         bic zsp, $0x00FF0000
@@ -3222,6 +3218,7 @@ opLDFnA: @0xE0
 opPOPHL: @0xE1
         mov r0, zsp
         add zsp, $2
+        bic zsp, $0x00FF0000
         bl mmu_rh
 
         lsr zrh, r0, $0x08
@@ -3242,6 +3239,8 @@ opLDFCA: @0xE2
 
 opPUSHL: @0xE5
         sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
         orr r0, zrl, zrh, lsl $0x08
         orr r0, r0, zsp, lsl $0x10
         bl mmu_wh
@@ -3263,9 +3262,8 @@ opANAn:  @0xE6
         b cpu_inst_r
 
 opR20H:  @0xE7
-        add r0, zpc, $3
+        add r0, zpc, $1
         bic r0, $0x00FF0000
-        bic r0, $0xFF000000
 
         sub zsp, $2
         bic zsp, $0x00FF0000
@@ -3292,8 +3290,7 @@ opASPn:  @0xE8
         tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        lsl r1, $10
-        lsrs zsp, r1, $10               @ clear any carried bit(s)
+        bics zsp, r1, $0xFF0000         @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $4
@@ -3328,9 +3325,8 @@ opXOAn:  @0xEE
         b cpu_inst_r
 
 opR28H:  @0xEF
-        add r0, zpc, $3
+        add r0, zpc, $1
         bic r0, $0x00FF0000
-        bic r0, $0xFF000000
 
         sub zsp, $2
         bic zsp, $0x00FF0000
@@ -3355,10 +3351,13 @@ opLDAFn: @0xF0
 
 opPOPAF: @0xF1
         mov r0, zsp
-        add zsp, $2
         bl mmu_rh
-        and zra, r0, $0xFF
-        lsr zrf, r0, $0x08
+
+        add zsp, $2
+        bic zsp, $0x00FF0000
+
+        lsr zra, r0, $0x08
+        and zrf, r0, $0xFF
 
         add zil, $3
         add zpc, $1
@@ -3383,6 +3382,8 @@ opDI:    @0xF3
 
 opPUSAF: @0xF5
         sub zsp, $2
+        bic zsp, $0x00FF0000
+        bic zsp, $0xFF000000
         orr r0, zrf, zra, lsl $0x08
         orr r0, r0, zsp, lsl $0x10
         bl mmu_wh
@@ -3404,9 +3405,8 @@ opORAn:  @0xF6
         b cpu_inst_r
 
 opR30H:  @0xF7
-        add r0, zpc, $3
+        add r0, zpc, $1
         bic r0, $0x00FF0000
-        bic r0, $0xFF000000
 
         sub zsp, $2
         bic zsp, $0x00FF0000
@@ -3426,8 +3426,9 @@ opLDHLSn:@0xF8
 
         eor zrf, zrf            @ reset all flags
 
-        lsl r1, r0, $0x18
-        add r1, zpc, r1, asr $0x18
+        lsl r0, $0x18
+        asr r0, $0x18
+        add r1, zpc, r0
 
         eor r0, r0, zsp
         eor r0, r0, r1          @ XOR all three
@@ -3495,9 +3496,8 @@ opCAn:   @0xFE
         b cpu_inst_r
 
 opR38H:  @0xFF
-        add r0, zpc, $3
+        add r0, zpc, $1
         bic r0, $0x00FF0000
-        bic r0, $0xFF000000
 
         sub zsp, $2
         bic zsp, $0x00FF0000
