@@ -66,20 +66,20 @@ stat_print:
         stmfd sp!, {r4-r8, lr}
 
         sub sp, $244
-        mov r1, sp
+        mov r7, sp
 
         mov r8, r0
 
         /* Copy in smsg (91 bytes) */
         ldr r0, =smsg
-        ldmia r0!, {r2-r7}
-        stmia r1!, {r2-r7}
-        ldmia r0!, {r2-r7}
-        stmia r1!, {r2-r7}
-        ldmia r0!, {r2-r7}
-        stmia r1!, {r2-r7}
-        ldmia r0!, {r2-r3}
-        stmia r1!, {r2-r3}
+        ldmia r0!, {r1-r6}
+        stmia r7!, {r1-r6}
+        ldmia r0!, {r1-r6}
+        stmia r7!, {r1-r6}
+        ldmia r0!, {r1-r6}
+        stmia r7!, {r1-r6}
+        ldmia r0!, {r1-r2}
+        stmia r7!, {r1-r2}
 
         @ zra
         ldr r0, [r8, $4]
@@ -123,45 +123,46 @@ stat_print:
 
         @ (zpc)
         ldr r0, [r8, $36]
-        mov r2, r1
-        bl mmu_rh
-        mov r1, r2
+        bl mmu_rb
+        mov r2, r0
 
-        orr r0, r0, lsl $0x10
-        lsr r0, $0x08
-        bic r0, $0xFF0000
+        ldr r0, [r8, $36]
+        add r0, $0x01
+        bl mmu_rb
+        orr r0, r2, lsl $0x08
+
         bl hex_print
 
         @ flags
         mov r0, $' '
-        strb r0, [r1]
+        strb r0, [r7]
         ldr r0, [r8, $24]
 
         @ flZ
         tst r0, $0x80
         movne r2, $'Z'
         moveq r2, $'z'
-        strb r2, [r1, $1]
+        strb r2, [r7, $1]
 
         @ flN
         tst r0, $0x40
         movne r2, $'N'
         moveq r2, $'n'
-        strb r2, [r1, $2]
+        strb r2, [r7, $2]
 
         @ flH
         tst r0, $0x20
         movne r2, $'H'
         moveq r2, $'h'
-        strb r2, [r1, $3]
+        strb r2, [r7, $3]
 
         @ flC
         tst r0, $0x10
         movne r2, $'C'
         moveq r2, $'c'
-        strb r2, [r1, $4]
+        strb r2, [r7, $4]
 
-        add r1, $5
+        add r7, $5
         ldr r4, [r8, $40]
 
         @ ic
@@ -186,14 +187,14 @@ stat_print:
 
         /* Copy in emsg (92 bytes) */
         ldr r0, =emsg
-        ldmia r0!, {r2-r7}
-        stmia r1!, {r2-r7}
-        ldmia r0!, {r2-r7}
-        stmia r1!, {r2-r7}
-        ldmia r0!, {r2-r7}
-        stmia r1!, {r2-r7}
-        ldmia r0!, {r2-r4}
-        stmia r1!, {r2-r4}
+        ldmia r0!, {r1-r6}
+        stmia r7!, {r1-r6}
+        ldmia r0!, {r1-r6}
+        stmia r7!, {r1-r6}
+        ldmia r0!, {r1-r6}
+        stmia r7!, {r1-r6}
+        ldmia r0!, {r1-r3}
+        stmia r7!, {r1-r3}
 
         /* Print whole string */
         mov r0, $1
@@ -212,33 +213,33 @@ hex_print:
 
         @ Leading space
         mov r2, $' '
-        strb r2, [r1]
+        strb r2, [r7]
 
         @ First nibble
         mov r2, r0
         and r2, $0xF
         ldrb r2, [r3, r2]
-        strb r2, [r1, $4]
+        strb r2, [r7, $4]
 
         @ Second nibble
         mov r2, r0, lsr $4
         and r2, $0xF
         ldrb r2, [r3, r2]
-        strb r2, [r1, $3]
+        strb r2, [r7, $3]
 
         @ Third nibble
         mov r2, r0, lsr $8
         and r2, $0xF
         ldrb r2, [r3, r2]
-        strb r2, [r1, $2]
+        strb r2, [r7, $2]
 
         @ Fourth nibble
         mov r2, r0, lsr $12
         and r2, $0xF
         ldrb r2, [r3, r2]
-        strb r2, [r1, $1]
+        strb r2, [r7, $1]
 
-        add r1, $5
+        add r7, $5
 
         mov pc, lr
 
