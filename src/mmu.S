@@ -218,25 +218,26 @@ mmu_load_end:
         .global mmu_ri
 mmu_ri:
         ldr r0, =mem
-        ldrb r0, [r0, zpc]
+        ldrb r0, [r0, zpc, lsr $0x10]
         mov pc, lr
 
         .global mmu_ri1
 mmu_ri1:
         ldr r0, =mem1
-        ldrb r0, [r0, zpc]
+        ldrb r0, [r0, zpc, lsr $0x10]
         mov pc, lr
 
         .global mmu_ri2
 mmu_ri2:
         ldr r0, =mem2
-        ldrb r0, [r0, zpc]
+        ldrb r0, [r0, zpc, lsr $0x10]
         mov pc, lr
 
         .global mmu_rih1
 mmu_rih1:
         ldr r0, =mem1
-        ldrh r0, [r0, zpc]
+        lsr r1, zpc, $0x10
+        ldrh r0, [r0, r1]
         mov pc, lr
 
         .global mmu_rif

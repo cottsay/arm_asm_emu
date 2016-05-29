@@ -115,18 +115,22 @@ stat_print:
 
         @ zsp
         ldr r0, [r8, $44]
+        lsr r0, $0x10
         bl hex_print
 
         @ zpc
         ldr r0, [r8, $36]
+        lsr r0, $0x10
         bl hex_print
 
         @ (zpc)
         ldr r0, [r8, $36]
+        lsr r0, $0x10
         bl mmu_rb
         mov r2, r0
 
         ldr r0, [r8, $36]
+        lsr r0, $0x10
         add r0, $0x01
         bl mmu_rb
         orr r0, r2, lsl $0x08
