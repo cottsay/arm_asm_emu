@@ -150,14 +150,7 @@ ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA
         .global cpu_init
 cpu_init:
         ldr zop, =ZOPS
-        mov zrc, $0
-        mov zrd, $0
-        mov zre, $0
-        mov zrf, $0xFF
-        mov zrh, $0
-        mov zrl, $0
         mov zpc, $0x00000000
-        mov zsp, $0x00FF0000
 
         mov pc, lr
 
@@ -339,7 +332,7 @@ opLDnnSP:@0x08
 opAHLBC: @0x09
         bic zrf, $flN           @ reset subtract
 
-        orr r0, zrl, zrh, lsl $0x08     @ put HL in r0
+        lsr r0, zhl, $0x10              @ put HL in r0
         orr r1, zrc, zrb, lsl $0x08     @ put BC in r1
         add lr, r0, r1
 
@@ -353,9 +346,7 @@ opAHLBC: @0x09
         orrne zrf, $flC                 @ set full-carry
         biceq zrf, $flC                 @ reset full-carry
 
-        and zrl, lr, $0xFF
-        lsr zrh, lr, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        lsl zhl, lr, $0x10
 
         add zil, $2
         add zpc, $0x00010000
@@ -556,7 +547,7 @@ opJRn:   @0x18
 opAHLDE: @0x19
         bic zrf, $flN           @ reset subtract
 
-        orr r0, zrl, zrh, lsl $0x08     @ put HL in r0
+        lsr r0, zhl, $0x10              @ put HL in r0
         orr r1, zre, zrd, lsl $0x08     @ put DE in r1
         add lr, r0, r1
 
@@ -570,9 +561,7 @@ opAHLDE: @0x19
         orrne zrf, $flC                 @ set full-carry
         biceq zrf, $flC                 @ reset full-carry
 
-        and zrl, lr, $0xFF
-        lsr zrh, lr, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        lsl zhl, lr, $0x10
 
         add zil, $2
         add zpc, $0x00010000
@@ -679,73 +668,49 @@ opJRNZn: @0x20
 
 opLDHLnn:@0x21
         bl mmu_rih1
-        and zrl, r0, $0xFF
-        lsr zrh, r0, $0x08
+        lsl zhl, r0, $0x10
 
         add zil, $3
         add zpc, $0x00030000
         b cpu_inst_r
 
 opLDHLiA:@0x22
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zra, r0, lsl $0x10
+        orr r0, zra, zhl
         bl mmu_wb
 
-        orr r0, zrl, zrh, lsl $0x08
-        add r0, $0x01
-        and zrl, r0, $0xFF
-        lsr zrh, r0, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        add zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opIHL:   @0x23
-        orr r0, zrl, zrh, lsl $0x08
-
-        add r0, $1
-
-        and zrl, r0, $0xFF
-        lsr zrh, r0, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        add zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opIH:    @0x24
-        bic zrf, $flN           @ reset subtract
+        bic zrf, $flZNH         @ reset zero, subtract and half-carry
 
-        add r0, zrh, $1
-
-        eor r1, r0, zrh
-        eor r1, r1, $1          @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
-
-        ands zrh, r0, $0xFF             @ clear any carried bit(s)
+        add zhl, $0x01000000
+        tst zhl, $0x0F000000    @ if lower nibble is zero
+        orreq zrf, $flH                 @ set half-carry
+        tst zhl, $0xFF000000    @ if result is completely zero
         orreq zrf, $flZ                 @ set zero
-        bicne zrf, $flZ                 @ reset zero
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opDH:    @0x25
-        orr zrf, $flN           @ set subtract
+        orr zrf, $flZNH         @ set zero, subtract and half-carry
 
-        add r0, zrh, $0xFF      @ subtract 1
-
-        eor r1, zrh, $0xFF
-        eor r1, r1, r0          @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        add zhl, $0xFF000000
+        teq zhl, $0x0F000000    @ if lower nibble is all set
         biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
-
-        ands zrh, r0, $0xFF             @ clear any carried bit(s)
-        orreq zrf, $flZ                 @ set zero
+        tst zhl, $0xFF000000    @ if result is not completely zero
         bicne zrf, $flZ                 @ reset zero
 
         add zil, $1
@@ -755,7 +720,8 @@ opDH:    @0x25
 opLDHn:  @0x26
         bl mmu_ri1
 
-        mov zrh, r0
+        bic zhl, $0xFF000000
+        orr zhl, r0, lsl $0x18
 
         add zil, $2
         add zpc, $0x00020000
@@ -813,88 +779,65 @@ opJRZn:  @0x28
         b cpu_inst_r
 
 opAHLHL: @0x29
-        bic zrf, $flN           @ reset subtract
+        bic zrf, $flNHC         @ reset subtract, half-carry and full-carry
 
-        orr r0, zrl, zrh, lsl $0x08     @ put HL in r0
-        add r1, r0, r0
-
-        tst r1, $0x1000         @ if bit 12 is set
+        tst zhl, $0x08000000    @ if bit 11 is set
         orrne zrf, $flH                 @ set half-carry
-        biceq zrf, $flH                 @ reset half-carry
 
-        tst r1, $0x10000        @ if bit 16 is set
-        orrne zrf, $flC                 @ set full-carry
-        biceq zrf, $flC                 @ reset full-carry
-
-        and zrl, r1, $0xFF
-        lsr zrh, r1, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        adds zhl, zhl
+        orrcs zrf, $flC                 @ set full-carry
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDAHLi:@0x2A
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
         mov zra, r0
 
-        orr r0, zrl, zrh, lsl $0x08
-        add r0, $0x01
-        and zrl, r0, $0xFF
-        lsr zrh, r0, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        add zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opDHL:   @0x2B
-        orr r0, zrl, zrh, lsl $0x08
-
-        sub r0, $1
-
-        and zrl, r0, $0xFF
-        lsr zrh, r0, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        sub zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opIL:    @0x2C
-        bic zrf, $flN           @ reset subtract
+        bic zrf, $flZNH         @ reset zero, subtract and half-carry
 
-        add r0, zrl, $1
+        ror zhl, $0x18
 
-        eor r1, r0, zrl
-        eor r1, r1, $1          @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
-
-        ands zrl, r0, $0xFF             @ clear any carried bit(s)
+        add zhl, $0x01000000
+        tst zhl, $0x0F000000    @ if lower nibble is zero
+        orreq zrf, $flH                 @ set half-carry
+        tst zhl, $0xFF000000    @ if result is completely zero
         orreq zrf, $flZ                 @ set zero
-        bicne zrf, $flZ                 @ reset zero
+
+        ror zhl, $0x08
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opDL:    @0x2D
-        orr zrf, $flN           @ set subtract
+        orr zrf, $flZNH         @ set zero, subtract and half-carry
 
-        add r0, zrl, $0xFF      @ subtract 1
+        ror zhl, $0x18
 
-        eor r1, zrl, $0xFF
-        eor r1, r1, r0          @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        add zhl, $0xFF000000
+        teq zhl, $0x0F000000    @ if lower nibble is all set
         biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
-
-        ands zrl, r0, $0xFF             @ clear any carried bit(s)
-        orreq zrf, $flZ                 @ set zero
+        tst zhl, $0xFF000000    @ if result is not completely zero
         bicne zrf, $flZ                 @ reset zero
+
+        ror zhl, $0x08
 
         add zil, $1
         add zpc, $0x00010000
@@ -903,7 +846,8 @@ opDL:    @0x2D
 opLDLn:  @0x2E
         bl mmu_ri1
 
-        mov zrl, r0
+        bic zhl, $0x00FF0000
+        orr zhl, r0, lsl $0x10
 
         add zil, $2
         add zpc, $0x00020000
@@ -942,15 +886,10 @@ opLDSPnn:@0x31
         b cpu_inst_r
 
 opLDHLdA:@0x32
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zra, r0, lsl $0x10
+        orr r0, zra, zhl
         bl mmu_wb
 
-        orr r0, zrl, zrh, lsl $0x08
-        sub r0, $0x01
-        and zrl, r0, $0xFF
-        lsr zrh, r0, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        sub zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
@@ -964,25 +903,19 @@ opISP:   @0x33
         b cpu_inst_r
 
 opIHLm:  @0x34
-        orr r0, zrl, zrh, lsl $0x08
+        bic zrf, $flZNH         @ reset zero, subtract and half-carry
+
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
-        bic zrf, $flN           @ reset subtract
+        lsl r0, $0x18
 
-        add r1, r0, $1
-
-        eor r0, r0, $1
-        eor r0, r0, r1          @ XOR all three
-        tst r0, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
-
-        ands r0, $0xFF                  @ clear any carried bit(s)
+        adds r0, $0x01000000
         orreq zrf, $flZ                 @ set zero
-        bicne zrf, $flZ                 @ reset zero
+        tst r0, $0x0F000000     @ if lower nibble is zero
+        orreq zrf, $flH                 @ set half-carry
 
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, r1, r0, lsl $0x10
+        orr r0, zhl, r0, lsr $0x18
         bl mmu_wb
 
         add zil, $3
@@ -990,25 +923,19 @@ opIHLm:  @0x34
         b cpu_inst_r
 
 opDHLm:  @0x35
-        orr r0, zrl, zrh, lsl $0x08
+        orr zrf, $flZNH         @ set zero, subtract and half-carry
+
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
-        orr zrf, $flN           @ set subtract
+        lsl r0, $0x18
 
-        add r1, r0, $0xFF       @ subtract 1
-
-        eor r0, r0, $0xFF
-        eor r0, r0, r1          @ XOR all three
-        tst r0, $0x10           @ if bit 4 is set
+        adds r0, $0xFF000000
+        orrne zrf, $flZ                 @ reset zero
+        teq r0, $0x0F000000     @ if lower nibble is all set
         biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
 
-        ands r0, $0xFF                  @ clear any carried bit(s)
-        orreq zrf, $flZ                 @ set zero
-        bicne zrf, $flZ                 @ reset zero
-
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, r1, r0, lsl $0x10
+        orr r0, zhl, r0, lsr $0x18
         bl mmu_wb
 
         add zil, $3
@@ -1016,9 +943,10 @@ opDHLm:  @0x35
         b cpu_inst_r
 
 opLDHLn: @0x36
-        bl mmu_ri1
-        orr r1, zrl, zrh, lsl $0x08
-        orr r0, r1, lsl $0x10
+        add r0, zpc, $0x00010000
+        lsr r0, $0x10
+        bl mmu_rb
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $3
@@ -1049,45 +977,28 @@ opJRCn: @0x38
         b cpu_inst_r
 
 opAHLSP: @0x39
-        bic zrf, $flN           @ reset subtract
+        bic zrf, $flNHC         @ reset subtract, half-carry and full-carry
 
-        @@@@ TEMP: get zsp in lower @@@@
-        lsr zsp, $0x10
+        adds lr, zhl, zsp
+        orrcs zrf, $flC
 
-        orr r1, zrl, zrh, lsl $0x08     @ put HL in r1
-        add r0, r1, zsp
-
-        eor r1, r1, zsp
-        eor r1, r1, r0          @ XOR all three
-        tst r1, $0x1000         @ if bit 12 is set
+        eor zhl, lr
+        eor zhl, zsp
+        tst zhl, $0x10000000    @ if bit 12 is set
         orrne zrf, $flH                 @ set half-carry
-        biceq zrf, $flH                 @ reset half-carry
 
-        tst r1, $0x10000        @ if bit 16 is set
-        orrne zrf, $flC                 @ set full-carry
-        biceq zrf, $flC                 @ reset full-carry
-
-        and zrl, r0, $0xFF
-        lsr zrh, r0, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
-
-        @@@@ TEMP: return zsp to upper @@@@
-        lsl zsp, $0x10
+        mov zhl, lr
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDAHLd:@0x3A
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
         mov zra, r0
 
-        orr r0, zrl, zrh, lsl $0x08
-        sub r0, $0x01
-        and zrl, r0, $0xFF
-        lsr zrh, r0, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        sub zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
@@ -1183,21 +1094,22 @@ opLDBE:  @0x43
         b cpu_inst_r
 
 opLDBH:  @0x44
-        mov zrb, zrh
+        lsr zrb, zhl, $0x18
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDBL:  @0x45
-        mov zrb, zrl
+        lsr zrb, zhl, $0x10
+        and zrb, $0x000000FF
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDBHL: @0x46
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mov zrb, r0
@@ -1240,21 +1152,22 @@ opLDCE:  @0x4B
         b cpu_inst_r
 
 opLDCH:  @0x4C
-        mov zrc, zrh
+        lsr zrc, zhl, $0x18
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDCL:  @0x4D
-        mov zrc, zrl
+        lsr zrc, zhl, $0x10
+        and zrc, $0x000000FF
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDCHL: @0x4E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mov zrc, r0
@@ -1298,21 +1211,22 @@ opLDDE:  @0x53
         b cpu_inst_r
 
 opLDDH:  @0x54
-        mov zrd, zrh
+        lsr zrd, zhl, $0x18
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDDL:  @0x55
-        mov zrd, zrl
+        lsr zrd, zhl, $0x10
+        and zrd, $0x000000FF
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDDHL: @0x56
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mov zrd, r0
@@ -1355,21 +1269,22 @@ opLDEE:  @0x5B
         b cpu_inst_r
 
 opLDEH:  @0x5C
-        mov zre, zrh
+        lsr zre, zhl, $0x18
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDEL:  @0x5D
-        mov zre, zrl
+        lsr zre, zhl, $0x10
+        and zre, $0x000000FF
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDEHL: @0x5E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mov zre, r0
@@ -1386,28 +1301,32 @@ opLDEA:  @0x5F
         b cpu_inst_r
 
 opLDHB:  @0x60
-        mov zrh, zrb
+        bic zhl, $0xFF000000
+        orr zhl, zrb, lsl $0x18
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDHC:  @0x61
-        mov zrh, zrc
+        bic zhl, $0xFF000000
+        orr zhl, zrc, lsl $0x18
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDHD:  @0x62
-        mov zrh, zrd
+        bic zhl, $0xFF000000
+        orr zhl, zrd, lsl $0x18
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDHE:  @0x63
-        mov zrh, zre
+        bic zhl, $0xFF000000
+        orr zhl, zre, lsl $0x18
 
         add zil, $1
         add zpc, $0x00010000
@@ -1419,59 +1338,67 @@ opLDHH:  @0x64
         b cpu_inst_r
 
 opLDHL:  @0x65
-        mov zrh, zrl
+        bic zhl, $0xFF000000
+        orr zhl, zhl, lsl $0x08
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDHHL: @0x66
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
-        mov zrh, r0
+        bic zhl, $0xFF000000
+        orr zhl, r0, lsl $0x08
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDHA:  @0x67
-        mov zrh, zra
+        bic zhl, $0xFF000000
+        orr zhl, zra, lsl $0x08
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDLB:  @0x68
-        mov zrl, zrb
+        bic zhl, $0x00FF0000
+        orr zhl, zrb, lsl $0x10
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDLC:  @0x69
-        mov zrl, zrc
+        bic zhl, $0x00FF0000
+        orr zhl, zrc, lsl $0x10
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDLD:  @0x6A
-        mov zrl, zrd
+        bic zhl, $0x00FF0000
+        orr zhl, zrd, lsl $0x10
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDLE:  @0x6B
-        mov zrl, zre
+        bic zhl, $0x00FF0000
+        orr zhl, zre, lsl $0x10
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDLH:  @0x6C
-        mov zrl, zrh
+        bic zhl, $0x00FF0000
+        orr zhl, zhl, lsr $0x08
 
         add zil, $1
         add zpc, $0x00010000
@@ -1483,25 +1410,26 @@ opLDLL:  @0x6D
         b cpu_inst_r
 
 opLDLHL: @0x6E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
-        mov zrl, r0
+        bic zhl, $0x00FF0000
+        orr zhl, r0, lsr $0x10
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDLA:  @0x6F
-        mov zrl, zra
+        bic zhl, $0x00FF0000
+        orr zhl, zra, lsl $0x10
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDHLB: @0x70
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zrb, r0, lsl $0x10
+        orr r0, zrb, zhl
         bl mmu_wb
 
         add zil, $2
@@ -1509,8 +1437,7 @@ opLDHLB: @0x70
         b cpu_inst_r
 
 opLDHLC: @0x71
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zrc, r0, lsl $0x10
+        orr r0, zrc, zhl
         bl mmu_wb
 
         add zil, $2
@@ -1518,8 +1445,7 @@ opLDHLC: @0x71
         b cpu_inst_r
 
 opLDHLD: @0x72
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zrd, r0, lsl $0x10
+        orr r0, zrd, zhl
         bl mmu_wb
 
         add zil, $2
@@ -1527,8 +1453,7 @@ opLDHLD: @0x72
         b cpu_inst_r
 
 opLDHLE: @0x73
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zre, r0, lsl $0x10
+        orr r0, zre, zhl
         bl mmu_wb
 
         add zil, $2
@@ -1536,8 +1461,7 @@ opLDHLE: @0x73
         b cpu_inst_r
 
 opLDHLH: @0x74
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zrh, r0, lsl $0x10
+        orr r0, zhl, zhl, lsr $0x18
         bl mmu_wb
 
         add zil, $2
@@ -1545,8 +1469,8 @@ opLDHLH: @0x74
         b cpu_inst_r
 
 opLDHLL: @0x75
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zrl, r0, lsl $0x10
+        orr r0, zhl, zhl, lsr $0x10
+        bic r0, $0x0000FF00
         bl mmu_wb
 
         add zil, $2
@@ -1561,8 +1485,7 @@ opHALT:  @0x76
         b cpu_inst_r
 
 opLDHLA: @0x77
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zra, r0, lsl $0x10
+        orr r0, zra, zhl
         bl mmu_wb
 
         add zil, $2
@@ -1598,21 +1521,22 @@ opLDAE:  @0x7B
         b cpu_inst_r
 
 opLDAH:  @0x7C
-        mov zra, zrh
+        lsr zra, zhl, $0x18
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDAL:  @0x7D
-        mov zra, zrl
+        lsr zra, zhl, $0x10
+        and zra, $0x000000FF
 
         add zil, $1
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDAHL: @0x7E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mov zra, r0
@@ -1709,17 +1633,17 @@ opAAE:   @0x83
 opAAH:   @0x84
         eor zrf, zrf            @ reset all flags
 
-        add r0, zra, zrh
+        add r1, zra, zhl, lsr $0x18
 
-        eor r1, r0, zra
-        eor r1, r1, zrh         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        eor r0, r1, zra
+        eor r0, zhl, lsr $0x18  @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -1729,17 +1653,20 @@ opAAH:   @0x84
 opAAL:   @0x85
         eor zrf, zrf            @ reset all flags
 
-        add r0, zra, zrl
+        lsr r0, zhl, $0x10
+        and r0, $0xFF
 
-        eor r1, r0, zra
-        eor r1, r1, zrl         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        add r1, zra, r0
+
+        eor r0, zra
+        eor r0, r1              @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -1747,7 +1674,7 @@ opAAL:   @0x85
         b cpu_inst_r
 
 opAAHL:  @0x86
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -1885,23 +1812,24 @@ opAcAE:  @0x8B
         b cpu_inst_r
 
 opAcAH:  @0x8C
+        lsr r1, zhl, $0x18
+
         tst zrf, $flC
-        moveq r0, zrh
-        addne r0, zrh, $1
+        addne r1, $1
 
         eor zrf, zrf            @ reset all flags
 
-        add r0, zra
+        add r1, zra
 
-        eor r1, r0, zra
-        eor r1, r1, zrh         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        eor r0, r1, zra
+        eor r0, zhl, lsr $0x18  @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -1909,23 +1837,26 @@ opAcAH:  @0x8C
         b cpu_inst_r
 
 opAcAL:  @0x8D
+        lsr r0, zhl, $0x10
+        and r0, $0xFF
+
         tst zrf, $flC
-        moveq r0, zrl
-        addne r0, zrl, $1
+        moveq r1, r0
+        addne r1, r0, $1
 
         eor zrf, zrf            @ reset all flags
 
-        add r0, zra
+        add r1, zra
 
-        eor r1, r0, zra
-        eor r1, r1, zrl         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        eor r0, zra
+        eor r0, r1              @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -1933,7 +1864,7 @@ opAcAL:  @0x8D
         b cpu_inst_r
 
 opAcAHL: @0x8E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         tst zrf, $flC
@@ -1944,8 +1875,8 @@ opAcAHL: @0x8E
 
         add r1, zra
 
-        eor r0, r0, zra
-        eor r0, r0, r1          @ XOR all three
+        eor r0, zra
+        eor r0, r1              @ XOR all three
         tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
@@ -2071,19 +2002,19 @@ opSAE:   @0x93
 opSAH:   @0x94
         mov zrf, $flN           @ set only subtract
 
-        mvn r1, zrh
-        add r1, $1              @ 2's compliment
-        add r0, zra, r1
+        mvn r0, zhl, lsr $0x18
+        add r0, $1              @ 2's compliment
+        add r1, zra, r0
 
-        eor r1, r0, zra
-        eor r1, r1, zrh         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        eor r0, r1, zra
+        eor r0, zhl, lsr $0x18  @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2093,19 +2024,22 @@ opSAH:   @0x94
 opSAL:   @0x95
         mov zrf, $flN           @ set only subtract
 
-        mvn r1, zrl
-        add r1, $1              @ 2's compliment
-        add r0, zra, r1
+        lsr r0, zhl, $0x10
+        and r0, $0xFF
 
-        eor r1, r0, zra
-        eor r1, r1, zrl         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        mvn r1, r0
+        add r1, $1              @ 2's compliment
+        add r1, zra
+
+        eor r0, zra
+        eor r0, r1              @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2113,7 +2047,7 @@ opSAL:   @0x95
         b cpu_inst_r
 
 opSAHL:  @0x96
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mov zrf, $flN           @ set only subtract
@@ -2122,8 +2056,8 @@ opSAHL:  @0x96
         add r1, $1              @ 2's compliment
         add r1, zra
 
-        eor r0, r0, zra
-        eor r0, r0, r1          @ XOR all three
+        eor r0, zra
+        eor r0, r1              @ XOR all three
         tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
@@ -2240,22 +2174,22 @@ opScAE:  @0x9B
         b cpu_inst_r
 
 opScAH:  @0x9C
-        mvn r1, zrh
+        mvn r0, zhl, lsr $0x18
         tst zrf, $flC
-        addeq r1, $1            @ 2's compliment
-        add r0, zra, r1
+        addeq r0, $1            @ 2's compliment
+        add r1, zra, r0
 
         mov zrf, $flN           @ set only subtract
 
-        eor r1, r0, zra
-        eor r1, r1, zrh         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        eor r0, r1, zra
+        eor r0, zhl, lsr $0x18  @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2263,22 +2197,25 @@ opScAH:  @0x9C
         b cpu_inst_r
 
 opScAL:  @0x9D
-        mvn r1, zrl
+        lsr r0, zhl, $0x10
+        and r0, $0xFF
+
+        mvn r1, r0
         tst zrf, $flC
         addeq r1, $1            @ 2's compliment
-        add r0, zra, r1
+        add r1, zra
 
         mov zrf, $flN           @ set only subtract
 
-        eor r1, r0, zra
-        eor r1, r1, zrl         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        eor r0, zra
+        eor r0, r1              @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2286,7 +2223,7 @@ opScAL:  @0x9D
         b cpu_inst_r
 
 opScAHL: @0x9E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mvn r1, r0
@@ -2296,8 +2233,8 @@ opScAHL: @0x9E
 
         mov zrf, $flN           @ set only subtract
 
-        eor r0, r0, zra
-        eor r0, r0, r1          @ XOR all three
+        eor r0, zra
+        eor r0, r1              @ XOR all three
         tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
@@ -2368,7 +2305,7 @@ opANAE:  @0xA3
 opANAH:  @0xA4
         mov zrf, $flH           @ set only half-carry
 
-        ands zra, zrh
+        ands zra, zhl, lsr $0x18
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2378,7 +2315,7 @@ opANAH:  @0xA4
 opANAL:  @0xA5
         mov zrf, $flH           @ set only half-carry
 
-        ands zra, zrl
+        ands zra, zhl, lsr $0x10
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2386,7 +2323,7 @@ opANAL:  @0xA5
         b cpu_inst_r
 
 opANAHL: @0xA6
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mov zrf, $flH           @ set only half-carry
@@ -2451,7 +2388,7 @@ opXOAE:  @0xAB
 opXOAH:  @0xAC
         eor zrf, zrf            @ reset all flags
 
-        eors zra, zrh
+        eors zra, zhl, lsr $0x18
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2461,7 +2398,8 @@ opXOAH:  @0xAC
 opXOAL:  @0xAD
         eor zrf, zrf            @ reset all flags
 
-        eors zra, zrl
+        eor zra, zhl, lsr $0x10
+        bics zra, $0x0000FF00
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2469,7 +2407,7 @@ opXOAL:  @0xAD
         b cpu_inst_r
 
 opXOAHL: @0xAE
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -2534,7 +2472,7 @@ opORAE:  @0xB3
 opORAH:  @0xB4
         eor zrf, zrf            @ reset all flags
 
-        orrs zra, zrh
+        orrs zra, zhl, lsr $0x18
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2544,7 +2482,8 @@ opORAH:  @0xB4
 opORAL:  @0xB5
         eor zrf, zrf            @ reset all flags
 
-        orrs zra, zrl
+        orr zra, zhl, lsr $0x10
+        bics zra, $0x0000FF00
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2552,7 +2491,7 @@ opORAL:  @0xB5
         b cpu_inst_r
 
 opORAHL: @0xB6
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -2665,19 +2604,19 @@ opCAE:   @0xBB
 opCAH:   @0xBC
         mov zrf, $flN           @ set only subtract
 
-        mvn r0, zrh
-        add r0, $1              @ 2's compliment
-        add r0, zra
+        mvn r1, zhl, lsr $0x18
+        add r1, $1              @ 2's compliment
+        add r1, zra
 
-        eor r1, r0, zra
-        eor r1, r1, zrh         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        eor r0, r1, zra
+        eor r0, zhl, lsr $0x18  @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands r0, $0xFF                  @ clear any carried bit(s)
+        ands r1, $0xFF                  @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2687,19 +2626,22 @@ opCAH:   @0xBC
 opCAL:   @0xBD
         mov zrf, $flN           @ set only subtract
 
-        mvn r0, zrl
-        add r0, $1              @ 2's compliment
-        add r0, zra
+        lsr r0, zhl, $0x10
+        and r0, $0xFF
 
-        eor r1, r0, zra
-        eor r1, r1, zrl         @ XOR all three
-        tst r1, $0x10           @ if bit 4 is set
+        mvn r1, r0
+        add r1, $1              @ 2's compliment
+        add r1, zra
+
+        eor r0, zra
+        eor r0, r1              @ XOR all three
+        tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r1, $0x100          @ if bit 8 is set
+        tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands r0, $0xFF                  @ clear any carried bit(s)
+        ands r1, $0xFF                  @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2707,7 +2649,7 @@ opCAL:   @0xBD
         b cpu_inst_r
 
 opCAHL:  @0xBE
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         mov zrf, $flN           @ set only subtract
@@ -3172,8 +3114,7 @@ opPOPHL: @0xE1
         add zsp, $0x00020000
         bl mmu_rh
 
-        lsr zrh, r0, $0x08
-        and zrl, r0, $0xFF
+        lsl zhl, r0, $0x10
 
         add zil, $3
         add zpc, $0x00010000
@@ -3190,8 +3131,7 @@ opLDFCA: @0xE2
 
 opPUSHL: @0xE5
         sub zsp, $0x00020000
-        orr r0, zrl, zrh, lsl $0x08
-        orr r0, zsp
+        orr r0, zsp, zhl, lsr $0x10
         bl mmu_wh
 
         add zil, $4
@@ -3249,8 +3189,7 @@ opASPn:  @0xE8
         b cpu_inst_r
 
 opJPHL:  @0xE9
-        orr zpc, zrl, zrh, lsl $0x08
-        lsl zpc, $0x10
+        mov zpc, zhl
 
         add zil, $1
         b cpu_inst_r
@@ -3382,9 +3321,7 @@ opLDHLSn:@0xF8
         tst r0, $0x10000        @ if bit 16 is set
         orrne zrf, $flC                 @ set full-carry
 
-        and zrl, r1, $0xFF
-        lsr zrh, r1, $0x08
-        and zrh, $0xFF                  @ clear any carried bit(s)
+        lsl zhl, r1, $0x10
 
         @@@@ TEMP: return zsp to upper @@@@
         lsl zsp, $0x10
@@ -3394,8 +3331,7 @@ opLDHLSn:@0xF8
         b cpu_inst_r
 
 opLDSHL: @0xF9
-        lsl zsp, zrl, $0x10
-        orr zsp, zrh, lsl $0x18
+        mov zsp, zhl
 
         add zil, $2
         add zpc, $0x00010000
@@ -3517,13 +3453,14 @@ cbRLCE:  @0xCB03
 cbRLCH:  @0xCB04
         eor zrf, zrf            @ reset all flags
 
-        lsl zrh, $1
-        tst zrh, $0x100         @ if bit 8 is set
-        orrne zrf, $flC                 @ set carry
-        orrne zrh, $0x01                @ set bit 0
+        and lr, zhl, $0xFF000000
+        lsls lr, $0x01          @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orrcss lr, $0x01000000          @ set bit 0
+        orreq zrf, $flZ                 @ set zero
 
-        ands zrh, $0xFF         @ clear any carried bit(s)
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0xFF000000
+        orr zhl, lr
 
         add zil, $2
         add zpc, $0x00010000
@@ -3532,20 +3469,20 @@ cbRLCH:  @0xCB04
 cbRLCL:  @0xCB05
         eor zrf, zrf            @ reset all flags
 
-        lsl zrl, $1
-        tst zrl, $0x100         @ if bit 8 is set
-        orrne zrf, $flC                 @ set carry
-        orrne zrl, $0x01                @ set bit 0
+        lsls lr, zhl, $0x09     @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orrcss lr, $0x01000000          @ set bit 0
+        orreq zrf, $flZ                 @ set zero
 
-        ands zrl, $0xFF         @ clear any carried bit(s)
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0x00FF0000
+        orr zhl, lr, lsr $0x08
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRLCHL: @0xCB06
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -3558,8 +3495,7 @@ cbRLCHL: @0xCB06
         ands r0, $0xFF          @ clear any carried bit(s)
         orreq zrf, $flZ         @ set zero
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $4
@@ -3640,12 +3576,13 @@ cbRRCE:  @0xCB0B
 cbRRCH:  @0xCB0C
         eor zrf, zrf            @ reset all flags
 
-        tst zrh, $0x01          @ if bit 0 is set
-        orrne zrf, $flC                 @ set carry
-        orrne zrh, $0x100               @ set bit 8
+        lsrs lr, zhl, $0x19     @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orrcss lr, $0x80                @ set bit 7
+        orreq zrf, $flZ                 @ set zero
 
-        lsrs zrh, $1
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0xFF000000
+        orr zhl, lr, lsl $0x18
 
         add zil, $2
         add zpc, $0x00010000
@@ -3654,19 +3591,21 @@ cbRRCH:  @0xCB0C
 cbRRCL:  @0xCB0D
         eor zrf, zrf            @ reset all flags
 
-        tst zrl, $0x01          @ if bit 0 is set
-        orrne zrf, $flC                 @ set carry
-        orrne zrl, $0x100               @ set bit 8
+        and lr, zhl, $0x00FF0000
+        lsrs lr, $0x11          @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orrcss lr, $0x80                @ set bit 7
+        orreq zrf, $flZ                 @ set zero
 
-        lsrs zrl, $1
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0x00FF0000
+        orr zhl, lr, lsl $0x10
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRRCHL: @0xCB0E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -3678,8 +3617,7 @@ cbRRCHL: @0xCB0E
         lsrs r0, $1
         orreq zrf, $flZ         @ set zero
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $4
@@ -3777,14 +3715,14 @@ cbRLH:   @0xCB14
 
         eor zrf, zrf            @ reset all flags
 
-        lsl zrh, $1
-        orrne zrh, $0x01
+        and lr, zhl, $0xFF000000
+        orrne lr, $0x00800000
+        lsls lr, $0x01          @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        tst zrh, $0x100         @ if bit 8 is set
-        orrne zrf, $flC                 @ set carry
-
-        ands zrh, $0xFF         @ clear any carried bit(s)
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0xFF000000
+        orr zhl, lr
 
         add zil, $2
         add zpc, $0x00010000
@@ -3795,21 +3733,21 @@ cbRLL:   @0xCB15
 
         eor zrf, zrf            @ reset all flags
 
-        lsl zrl, $1
-        orrne zrl, $0x01
+        lsl lr, zhl, $0x08
+        orrne lr, $0x00800000
+        lsls lr, $0x01          @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        tst zrl, $0x100         @ if bit 8 is set
-        orrne zrf, $flC                 @ set carry
-
-        ands zrl, $0xFF         @ clear any carried bit(s)
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0x00FF0000
+        orr zhl, lr, lsl $0x08
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRLHL:  @0xCB16
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         tst zrf, $flC
@@ -3825,8 +3763,7 @@ cbRLHL:  @0xCB16
         ands r0, $0xFF          @ clear any carried bit(s)
         orreq zrf, $flZ         @ set zero
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $4
@@ -3916,39 +3853,42 @@ cbRRE:   @0xCB1B
         b cpu_inst_r
 
 cbRRH:   @0xCB1C
-        tst zrf, $flC           @ if carry
-        orrne zrh, $0x100               @ set bit 8
+        and r0, zrf, $flC       @ save carry
 
         eor zrf, zrf            @ reset all flags
 
-        tst zrh, $0x01          @ if bit 0 is set
-        orrne zrf, $flC                 @ set carry
+        lsrs lr, zhl, $0x19     @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orrs lr, r0, lsl $0x03          @ set bit 7
+        orreq zrf, $flZ                 @ set zero
 
-        lsrs zrh, $1
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0xFF000000
+        orr zhl, lr, lsl $0x18
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRRL:   @0xCB1D
-        tst zrf, $flC           @ if carry
-        orrne zrl, $0x100               @ set bit 8
+        tst zrf, $flC
 
         eor zrf, zrf            @ reset all flags
 
-        tst zrl, $0x01          @ if bit 0 is set
-        orrne zrf, $flC                 @ set carry
+        and lr, zhl, $0x00FF0000
+        orrne lr, $0x01000000           @ set bit 7
+        lsrs lr, $0x11          @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        lsrs zrl, $1
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0x00FF0000
+        orr zhl, lr, lsl $0x10
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRRHL:  @0xCB1E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         tst zrf, $flC           @ if carry
@@ -3962,8 +3902,7 @@ cbRRHL:  @0xCB1E
         lsrs r0, $1
         orreq zrf, $flZ         @ set zero
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $4
@@ -4049,13 +3988,13 @@ cbSLAE:  @0xCB23
 cbSLAH:  @0xCB24
         eor zrf, zrf            @ reset all flags
 
-        lsl zrh, $1
+        and lr, zhl, $0xFF000000
+        lsls lr, $0x01          @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        tst zrh, $0x100         @ if bit 8 is set
-        orrne zrf, $flC                 @ set carry
-
-        ands zrh, $0xFF
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0xFF000000
+        orr zhl, lr
 
         add zil, $2
         add zpc, $0x00010000
@@ -4064,20 +4003,19 @@ cbSLAH:  @0xCB24
 cbSLAL:  @0xCB25
         eor zrf, zrf            @ reset all flags
 
-        lsl zrl, $1
+        lsls lr, zhl, $0x09     @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        tst zrl, $0x100         @ if bit 8 is set
-        orrne zrf, $flC                 @ set carry
-
-        ands zrl, $0xFF
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0x00FF0000
+        orr zhl, lr, lsl $0x08
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbSLAHL: @0xCB26
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf           @ reset all flags
@@ -4090,8 +4028,7 @@ cbSLAHL: @0xCB26
         ands r0, $0xFF
         orreq zrf, $flZ         @ set zero
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $4
@@ -4180,14 +4117,12 @@ cbSRAE:  @0xCB2B
 cbSRAH:  @0xCB2C
         eor zrf, zrf            @ reset all flags
 
-        tst zrh, $0x01          @ if bit 0 is set
-        orrne zrf, $flC                 @ set carry
+        asrs lr, zhl, $0x19     @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        lsrs zrh, $1
-        orreq zrf, $flZ         @ set zero
-
-        tst zrh, $0x40
-        orrne zrh, $0x80
+        bic zhl, $0xFF000000
+        orr zhl, lr, lsl $0x18
 
         add zil, $2
         add zpc, $0x00010000
@@ -4196,21 +4131,20 @@ cbSRAH:  @0xCB2C
 cbSRAL:  @0xCB2D
         eor zrf, zrf            @ reset all flags
 
-        tst zrd, $0x01          @ if bit 0 is set
-        orrne zrf, $flC                 @ set carry
+        lsl lr, zhl, $0x08
+        asrs lr, $0x19          @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        lsrs zrd, $1
-        orreq zrf, $flZ         @ set zero
-
-        tst zrd, $0x40
-        orrne zrd, $0x80
+        bic zhl, $0xFF000000
+        orr zhl, lr, lsl $0x18
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbSRAHL: @0xCB2E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -4224,8 +4158,7 @@ cbSRAHL: @0xCB2E
         tst r0, $0x40
         orrne r0, $0x80
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $4
@@ -4303,11 +4236,14 @@ cbSWPE:  @0xCB33
 cbSWPH:  @0xCB34
         eor zrf, zrf            @ reset all flags
 
-        lsl zrh, $0x04
-        orr zrh, zrh, lsr $0x08
+        lsr lr, zhl, $0x18
+        orr lr, lr, lsl $0x08
 
-        ands zrh, $0xFF
+        ands lr, $0x00000FF0
         orreq zrf, $flZ         @ set zero
+
+        bic zhl, $0xFF000000
+        orr zhl, lr, lsl $0x14
 
         add zil, $2
         add zpc, $0x00010000
@@ -4316,18 +4252,21 @@ cbSWPH:  @0xCB34
 cbSWPL:  @0xCB35
         eor zrf, zrf            @ reset all flags
 
-        lsl zrl, $0x04
-        orr zrl, zrl, lsr $0x08
+        lsl lr, zhl, $0x08
+        orr lr, lr, lsr $0x08
 
-        ands zrl, $0xFF
+        ands lr, $0x0FF00000
         orreq zrf, $flZ         @ set zero
+
+        bic zhl, $0x00FF0000
+        orr zhl, lr, lsr $0x04
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbSWPHL: @0xCB36
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -4338,8 +4277,7 @@ cbSWPHL: @0xCB36
         ands r0, $0xFF
         orreq zrf, $flZ         @ set zero
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $4
@@ -4414,11 +4352,12 @@ cbSRLE:  @0xCB3B
 cbSRLH:  @0xCB3C
         eor zrf, zrf            @ reset all flags
 
-        tst zrh, $0x01          @ if bit 0 is set
-        orrne zrf, $flC                 @ set carry
+        lsrs lr, zhl, $0x19     @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        lsrs zrh, $1
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0xFF000000
+        orr zhl, lr, lsl $0x18
 
         add zil, $2
         add zpc, $0x00010000
@@ -4427,18 +4366,20 @@ cbSRLH:  @0xCB3C
 cbSRLL:  @0xCB3D
         eor zrf, zrf            @ reset all flags
 
-        tst zrd, $0x01          @ if bit 0 is set
-        orrne zrf, $flC                 @ set carry
+        lsl lr, zhl, $0x08
+        lsrs lr, $0x19          @ perform rotate
+        orrcs zrf, $flC                 @ set carry
+        orreq zrf, $flZ                 @ set zero
 
-        lsrs zrd, $1
-        orreq zrf, $flZ         @ set zero
+        bic zhl, $0xFF000000
+        orr zhl, lr, lsl $0x18
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbSRLHL: @0xCB3E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -4449,8 +4390,7 @@ cbSRLHL: @0xCB3E
         lsrs r0, $1
         orreq zrf, $flZ         @ set zero
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $4
@@ -4522,7 +4462,8 @@ cbBT0H:  @0xCB44
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrh, $0x01
+        tst zhl, $0x01000000
+
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4534,7 +4475,7 @@ cbBT0L:  @0xCB45
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrl, $0x01
+        tst zhl, $0x00010000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4543,7 +4484,7 @@ cbBT0L:  @0xCB45
         b cpu_inst_r
 
 cbBT0HL: @0xCB46
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic zrf, $flN
@@ -4621,7 +4562,7 @@ cbBT1H:  @0xCB4C
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrh, $0x02
+        tst zhl, $0x02000000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4633,7 +4574,7 @@ cbBT1L:  @0xCB4D
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrl, $0x02
+        tst zhl, $0x00020000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4642,7 +4583,7 @@ cbBT1L:  @0xCB4D
         b cpu_inst_r
 
 cbBT1HL: @0xCB4E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic zrf, $flN
@@ -4720,7 +4661,7 @@ cbBT2H:  @0xCB54
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrh, $0x04
+        tst zhl, $0x04000000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4732,7 +4673,7 @@ cbBT2L:  @0xCB55
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrl, $0x04
+        tst zhl, $0x00040000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4741,7 +4682,7 @@ cbBT2L:  @0xCB55
         b cpu_inst_r
 
 cbBT2HL: @0xCB56
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic zrf, $flN
@@ -4819,7 +4760,7 @@ cbBT3H:  @0xCB5C
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrh, $0x08
+        tst zhl, $0x08000000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4831,7 +4772,7 @@ cbBT3L:  @0xCB5D
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrl, $0x08
+        tst zhl, $0x00080000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4840,7 +4781,7 @@ cbBT3L:  @0xCB5D
         b cpu_inst_r
 
 cbBT3HL: @0xCB5E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic zrf, $flN
@@ -4918,7 +4859,7 @@ cbBT4H:  @0xCB64
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrh, $0x10
+        tst zhl, $0x10000000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4930,7 +4871,7 @@ cbBT4L:  @0xCB65
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrl, $0x10
+        tst zhl, $0x00100000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -4939,7 +4880,7 @@ cbBT4L:  @0xCB65
         b cpu_inst_r
 
 cbBT4HL: @0xCB66
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic zrf, $flN
@@ -5017,7 +4958,7 @@ cbBT5H:  @0xCB6C
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrh, $0x20
+        tst zhl, $0x20000000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -5029,7 +4970,7 @@ cbBT5L:  @0xCB6D
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrl, $0x20
+        tst zhl, $0x00200000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -5038,7 +4979,7 @@ cbBT5L:  @0xCB6D
         b cpu_inst_r
 
 cbBT5HL: @0xCB6E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic zrf, $flN
@@ -5116,7 +5057,7 @@ cbBT6H:  @0xCB74
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrh, $0x40
+        tst zhl, $0x40000000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -5128,7 +5069,7 @@ cbBT6L:  @0xCB75
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrl, $0x40
+        tst zhl, $0x00400000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -5137,7 +5078,7 @@ cbBT6L:  @0xCB75
         b cpu_inst_r
 
 cbBT6HL: @0xCB76
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic zrf, $flN
@@ -5215,7 +5156,7 @@ cbBT7H:  @0xCB7C
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrh, $0x80
+        tst zhl, $0x80000000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -5227,7 +5168,7 @@ cbBT7L:  @0xCB7D
         bic zrf, $flN
         orr zrf, $flH
 
-        tst zrl, $0x80
+        tst zhl, $0x00800000
         orreq zrf, $flZ
         bicne zrf, $flZ
 
@@ -5236,7 +5177,7 @@ cbBT7L:  @0xCB7D
         b cpu_inst_r
 
 cbBT7HL: @0xCB7E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic zrf, $flN
@@ -5291,27 +5232,26 @@ cbRS0E:  @0xCB83
         b cpu_inst_r
 
 cbRS0H:  @0xCB84
-        bic zrh, $0x01
+        bic zhl, $0x01000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS0L:  @0xCB85
-        bic zrl, $0x01
+        bic zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS0HL: @0xCB86
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x01
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5354,27 +5294,26 @@ cbRS1E:  @0xCB8B
         b cpu_inst_r
 
 cbRS1H:  @0xCB8C
-        bic zrh, $0x02
+        bic zhl, $0x02000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS1L:  @0xCB8D
-        bic zrl, $0x02
+        bic zhl, $0x00020000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS1HL: @0xCB8E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x02
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5417,27 +5356,26 @@ cbRS2E:  @0xCB93
         b cpu_inst_r
 
 cbRS2H:  @0xCB94
-        bic zrh, $0x04
+        bic zhl, $0x04000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS2L:  @0xCB95
-        bic zrl, $0x04
+        bic zhl, $0x00040000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS2HL: @0xCB96
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x04
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5480,27 +5418,26 @@ cbRS3E:  @0xCB9B
         b cpu_inst_r
 
 cbRS3H:  @0xCB9C
-        bic zrh, $0x08
+        bic zhl, $0x08000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS3L:  @0xCB9D
-        bic zrl, $0x08
+        bic zhl, $0x00080000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS3HL: @0xCB9E
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x08
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5543,27 +5480,26 @@ cbRS4E:  @0xCBA3
         b cpu_inst_r
 
 cbRS4H:  @0xCBA4
-        bic zrh, $0x10
+        bic zhl, $0x10000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS4L:  @0xCBA5
-        bic zrl, $0x10
+        bic zhl, $0x00100000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS4HL: @0xCBA6
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x10
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5606,27 +5542,26 @@ cbRS5E:  @0xCBAB
         b cpu_inst_r
 
 cbRS5H:  @0xCBAC
-        bic zrh, $0x20
+        bic zhl, $0x20000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS5L:  @0xCBAD
-        bic zrl, $0x20
+        bic zhl, $0x00200000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS5HL: @0xCBAE
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x20
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5669,27 +5604,26 @@ cbRS6E:  @0xCBB3
         b cpu_inst_r
 
 cbRS6H:  @0xCBB4
-        bic zrh, $0x40
+        bic zhl, $0x40000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS6L:  @0xCBB5
-        bic zrl, $0x40
+        bic zhl, $0x00400000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS6HL: @0xCBB6
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x40
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5732,27 +5666,26 @@ cbRS7E:  @0xCBBB
         b cpu_inst_r
 
 cbRS7H:  @0xCBBC
-        bic zrh, $0x80
+        bic zhl, $0x80000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS7L:  @0xCBBD
-        bic zrl, $0x80
+        bic zhl, $0x00800000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbRS7HL: @0xCBBE
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x80
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5795,27 +5728,26 @@ cbST0E:  @0xCBC3
         b cpu_inst_r
 
 cbST0H:  @0xCBC4
-        orr zrh, $0x01
+        orr zhl, $0x01000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST0L:  @0xCBC5
-        orr zrl, $0x01
+        orr zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST0HL: @0xCBC6
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x01
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5858,27 +5790,26 @@ cbST1E:  @0xCBCB
         b cpu_inst_r
 
 cbST1H:  @0xCBCC
-        orr zrh, $0x02
+        orr zhl, $0x02000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST1L:  @0xCBCD
-        orr zrl, $0x02
+        orr zhl, $0x00020000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST1HL: @0xCBCE
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x02
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5921,27 +5852,26 @@ cbST2E:  @0xCBD3
         b cpu_inst_r
 
 cbST2H:  @0xCBD4
-        orr zrh, $0x04
+        orr zhl, $0x04000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST2L:  @0xCBD5
-        orr zrl, $0x04
+        orr zhl, $0x00040000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST2HL: @0xCBD6
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x04
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -5984,27 +5914,26 @@ cbST3E:  @0xCBDB
         b cpu_inst_r
 
 cbST3H:  @0xCBDC
-        orr zrh, $0x08
+        orr zhl, $0x08000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST3L:  @0xCBDD
-        orr zrl, $0x08
+        orr zhl, $0x00080000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST3HL: @0xCBDE
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x08
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -6047,27 +5976,26 @@ cbST4E:  @0xCBE3
         b cpu_inst_r
 
 cbST4H:  @0xCBE4
-        orr zrh, $0x10
+        orr zhl, $0x10000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST4L:  @0xCBE5
-        orr zrl, $0x10
+        orr zhl, $0x00100000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST4HL: @0xCBE6
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x10
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -6110,27 +6038,26 @@ cbST5E:  @0xCBEB
         b cpu_inst_r
 
 cbST5H:  @0xCBEC
-        orr zrh, $0x20
+        orr zhl, $0x20000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST5L:  @0xCBED
-        orr zrl, $0x20
+        orr zhl, $0x00200000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST5HL: @0xCBEE
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x20
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -6173,27 +6100,26 @@ cbST6E:  @0xCBF3
         b cpu_inst_r
 
 cbST6H:  @0xCBF4
-        orr zrh, $0x40
+        orr zhl, $0x40000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST6L:  @0xCBF5
-        orr zrl, $0x40
+        orr zhl, $0x00400000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST6HL: @0xCBF6
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x40
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2
@@ -6236,27 +6162,26 @@ cbST7E:  @0xCBFB
         b cpu_inst_r
 
 cbST7H:  @0xCBFC
-        orr zrh, $0x80
+        orr zhl, $0x80000000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST7L:  @0xCBFD
-        orr zrl, $0x80
+        orr zhl, $0x00800000
 
         add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 cbST7HL: @0xCBFE
-        orr r0, zrl, zrh, lsl $0x08
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x80
 
-        orr r0, zrh, lsl $0x18
-        orr r0, zrl, lsl $0x10
+        orr r0, zhl
         bl mmu_wb
 
         add zil, $2

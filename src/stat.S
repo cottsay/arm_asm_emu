@@ -40,9 +40,9 @@
 
         .text
 
-smsg:   .ascii "   A    B    C    D    E    F    H    L   SP   PC  (PC) FLAG  IC   TC   GC   GL\n"
+smsg:   .ascii "   A    B    C    D    E    F   HL   SP   PC  (PC) FLAG  IC   TC   GC   GL\n"
 smsg_e: .align
-emsg:   .ascii "\n--------------------------------------------------------------------------------\n"
+emsg:   .ascii "\n---------------------------------------------------------------------------\n"
 emsg_e: .align
 hexch:  .ascii "0123456789ABCDEF"
         .align
@@ -51,26 +51,26 @@ nimsg:  .ascii "A CPU exception has occurred\n\n"
 
         .global stat_cpu_exception
 stat_cpu_exception:
-        stmfd sp!, {r7, lr}
+        stmfd sp!, {r2, r7}
 
-        mov r0, $1
+        mov r0, $0x01
         ldr r1, =nimsg
-        mov r2, $30
-        mov r7, $4
+        mov r2, $0x1E
+        mov r7, $0x04
         svc $0
 
-        ldmfd sp!, {r7, pc}
+        ldmfd sp!, {r2, r7}
+        mov pc, lr
 
         .global stat_print
 stat_print:
-        stmfd sp!, {r4-r8, lr}
+        stmfd sp!, {r2-r8, lr}
 
+        mov r8, sp
         sub sp, $244
         mov r7, sp
 
-        mov r8, r0
-
-        /* Copy in smsg (91 bytes) */
+        /* Copy in smsg (75 bytes) */
         ldr r0, =smsg
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
@@ -78,8 +78,9 @@ stat_print:
         stmia r7!, {r1-r6}
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
-        ldmia r0!, {r1-r2}
-        stmia r7!, {r1-r2}
+        ldr r1, [r0]
+        str r1, [r7]
+        add r7, $0x03
 
         @ zra
         ldr r0, [r8, $4]
@@ -105,33 +106,25 @@ stat_print:
         ldr r0, [r8, $24]
         bl hex_print
 
-        @ zrh
-        ldr r0, [r8, $28]
-        bl hex_print
-
-        @ zrl
-        ldr r0, [r8, $32]
+        @ zhl
+        lsr r0, r9, $0x10
         bl hex_print
 
         @ zsp
-        ldr r0, [r8, $44]
-        lsr r0, $0x10
+        lsr r0, r10, $0x10
         bl hex_print
 
         @ zpc
-        ldr r0, [r8, $36]
-        lsr r0, $0x10
+        lsr r0, r11, $0x10
         bl hex_print
 
         @ (zpc)
-        ldr r0, [r8, $36]
-        lsr r0, $0x10
+        lsr r0, r11, $0x10
         bl mmu_rb
         mov r2, r0
 
-        ldr r0, [r8, $36]
+        add r0, r11, $0x00010000
         lsr r0, $0x10
-        add r0, $0x01
         bl mmu_rb
         orr r0, r2, lsl $0x08
 
@@ -167,29 +160,28 @@ stat_print:
         strb r2, [r7, $4]
 
         add r7, $5
-        ldr r4, [r8, $40]
 
         @ ic
-        and r0, r4, $0x07
+        and r0, r12, $0x07
         bl hex_print
 
         @ tc
-        and r0, r4, $0xF8
+        and r0, r12, $0xF8
         lsr r0, $3
         bl hex_print
 
         @ gc
-        lsl r0, r4, $0x10
+        lsl r0, r12, $0x10
         lsr r0, $0x18
         rsb r0, $0x80
         bl hex_print
 
         @ gl
-        lsl r0, r4, $0x06
+        lsl r0, r12, $0x06
         lsr r0, $0x18
         bl hex_print
 
-        /* Copy in emsg (92 bytes) */
+        /* Copy in emsg (76 bytes) */
         ldr r0, =emsg
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
@@ -197,20 +189,20 @@ stat_print:
         stmia r7!, {r1-r6}
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
-        ldmia r0!, {r1-r3}
-        stmia r7!, {r1-r3}
+        ldmia r0!, {r1-r2}
+        stmia r7!, {r1-r2}
 
         /* Print whole string */
         mov r0, $1
         mov r1, sp
-        mov r2, $241
+        mov r2, $226
         add r2, $1
         mov r7, $4
         svc $0
 
         add sp, $244
 
-        ldmfd sp!, {r4-r8, pc}
+        ldmfd sp!, {r2-r8, pc}
 
 hex_print:
         ldr r3, =hexch

@@ -42,13 +42,6 @@
 
         .bss
 
-ev:
-ev_time:.space 8
-ev_type:.space 2
-ev_code:.space 2
-ev_val: .space 4
-
-scratch:.space 28
 devfd:  .space 4
 
         .text
@@ -59,9 +52,7 @@ devpath:.asciz "/dev/input/event0"
 
         .global input_init
 input_init:
-        ldr r0, =scratch
-        stmea r0!, {r1-r4, r7}
-        mov r4, r0
+        stmfd sp!, {r1-r3, r7}
 
         /* Open the device */
         ldr r0, =devpath
@@ -87,19 +78,18 @@ input_init:
         mov r1, $0x04
         svc $0
 
-        ldmea r4, {r1-r4, r7}
+        ldmfd sp!, {r1-r3, r7}
         mov pc, lr
 
         .global input_step
 input_step:
-        ldr r0, =scratch
-        stmea r0!, {r1-r3, r7}
-        mov r3, r0
+        stmfd sp!, {r1-r2, r7}
+        sub sp, $0x10
 
         /* Try to read 16 bytes */
         ldr r0, =devfd
         ldr r0, [r0]
-        ldr r1, =ev
+        mov r1, sp
         mov r2, $0x10
         mov r7, $0x03
         svc $0
@@ -145,7 +135,8 @@ input_step:
         blne mmu_int
 
 input_step_ret:
-        ldmea r3, {r1-r3, r7}
+        add sp, $0x10
+        ldmfd sp!, {r1-r2, r7}
         b input_ret
 
         .end

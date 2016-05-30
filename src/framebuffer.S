@@ -41,8 +41,6 @@
         .bss
 
 morton: .space 512
-
-scratch:.space 256
 render: .space 40
 display:.space 4
 llen:   .space 4
@@ -59,9 +57,7 @@ palette:.word 0x00FFFFFF        /* White */
 
         .global display_init
 display_init:
-        ldr r0, =scratch
-        stmea r0!, {r2-r14}
-        mov sp, r0
+        stmfd sp!, {r2-r12, lr}
 
         /* Populate the morton table */
         ldr r0, =morton
@@ -108,6 +104,8 @@ display_init_morton:
         mov r4, r0
 
         /* Get the line length using ioctl */
+        sub sp, $0x46
+
         mov r1, $0x4600
         add r1, $0x0002
         mov r2, sp
@@ -117,6 +115,8 @@ display_init_morton:
         ldr r2, [sp, $44]
         ldr r0, =llen
         str r2, [r0]
+
+        add sp, $0x46
 
         /* Map the display */
         mov r0, $0x00
@@ -133,14 +133,11 @@ display_init_morton:
 
         bl display_clear
 
-        mov r0, sp
-        ldmea r0, {r2-r13, pc}
+        ldmfd sp!, {r2-r12, pc}
 
         .global display_renderline
 display_renderline:
-        ldr r0, =scratch
-        stmea r0!, {r1-r14}
-        mov sp, r0
+        stmfd sp!, {r1-r12, lr}
 
         mov r12, $0xFF00
 
@@ -269,14 +266,11 @@ display_rendertile:
         subs r11, $0x01
         bne display_rendertile
 
-        mov r0, sp
-        ldmea r0, {r1-r13, pc}
+        ldmfd sp!, {r1-r12, pc}
 
         .global display_putline
 display_putline:
-        ldr r0, =scratch
-        stmea r0!, {r1-r14}
-        mov sp, r0
+        stmfd sp!, {r1-r12, lr}
 
         /* Load palette in r10 */
         /* TODO: Should this be fetched during renderline? */
@@ -340,8 +334,7 @@ do_four:
         addne r1, $0x04
         bne do_sixteen
 
-        mov r0, sp
-        ldmea r0, {r1-r13, pc}
+        ldmfd sp!, {r1-r12, pc}
 
 display_clear:
         ldr r0, =display

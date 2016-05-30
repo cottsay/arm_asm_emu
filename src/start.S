@@ -53,7 +53,6 @@ _start:
         bne dispatch_exit
 
 dispatch_run:
-        bl dispatch_enter
         bl dispatch_init
 dispatch_ret:
         mov r0, $0x00000600
@@ -66,7 +65,6 @@ dispatch_ret:
 
         .global dispatch_exit
 dispatch_exit:
-        bl dispatch_leave
         mov r7, $1
         svc $0
 

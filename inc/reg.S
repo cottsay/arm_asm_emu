@@ -45,16 +45,17 @@ zrc     .req r5
 zrd     .req r6
 zre     .req r7
 zrf     .req r8
-zrh     .req r9
-zrl     .req r10
+zhl     .req r9
+zsp     .req r10
 zpc     .req r11
 zil     .req r12
-zsp     .req sp
 
         .equ flZ, 0x80
         .equ flN, 0x40
         .equ flH, 0x20
         .equ flC, 0x10
+        .equ flZNH, (flZ | flN | flH)
+        .equ flNHC, (flN | flH | flC)
 
         .equ intV, 0x01
         .equ intL, 0x02

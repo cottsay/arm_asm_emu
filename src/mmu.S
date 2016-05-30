@@ -52,9 +52,6 @@
 
         .bss
 
-scr:    .space 32
-scr_end:
-
 bswp:   .space 256
 mem:    .space 1
 mem1:   .space 1
@@ -77,8 +74,7 @@ bios:   .ifdef EMBED_BIOS
         .endif
 
 mmu_do_bswp:
-        ldr r0, =scr
-        stmea r0, {r2-r9}
+        stmfd sp!, {r2-r9}
 
         /* Copy bios swap to mem */
         ldr r0, =bswp
@@ -114,15 +110,12 @@ mmu_do_bswp:
         mov r1, $0x00
         strb r1, [r0]
 
-        ldr r0, =scr_end
-        ldmea r0, {r2-r9}
-
+        ldmfd sp!, {r2-r9}
         mov pc, lr
 
         .global mmu_init
 mmu_init:
-        ldr r0, =scr
-        stmea r0, {r2-r9}
+        stmfd sp!, {r2-r9}
 
         /* Copy bios to mem */
         ldr r0, =bios
@@ -154,14 +147,12 @@ mmu_init:
         mov r1, $0x01
         strb r1, [r0]
 
-        ldr r0, =scr_end
-        ldmea r0, {r2-r9}
-
+        ldmfd sp!, {r2-r9}
         mov pc, lr
 
         .global mmu_load
 mmu_load:
-        stmfd sp!, {r4-r9}
+        stmfd sp!, {r2-r9}
 
         sub sp, $12
 
@@ -212,7 +203,7 @@ mmu_load_close:
 mmu_load_end:
         add sp, $12
 
-        ldmfd sp!, {r4-r9}
+        ldmfd sp!, {r2-r9}
         mov pc, lr
 
         .global mmu_ri
