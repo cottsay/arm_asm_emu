@@ -54,6 +54,7 @@ zil     .req r12
         .equ flN, 0x40
         .equ flH, 0x20
         .equ flC, 0x10
+        .equ flNH, (flN | flH)
         .equ flZNH, (flZ | flN | flH)
         .equ flNHC, (flN | flH | flC)
 

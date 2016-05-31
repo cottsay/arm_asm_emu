@@ -856,8 +856,7 @@ opLDLn:  @0x2E
 opCPL:   @0x2F
         mvn zra, zra
         and zra, $0xFF
-        orr zrf, $flN
-        orr zrf, $flH
+        orr zrf, $flNH
 
         add zil, $1
         add zpc, $0x00010000
@@ -931,7 +930,7 @@ opDHLm:  @0x35
         lsl r0, $0x18
 
         adds r0, $0xFF000000
-        orrne zrf, $flZ                 @ reset zero
+        bicne zrf, $flZ                 @ reset zero
         teq r0, $0x0F000000     @ if lower nibble is all set
         biceq zrf, $flH                 @ reset half-carry
 
@@ -954,8 +953,7 @@ opLDHLn: @0x36
         b cpu_inst_r
 
 opSCF:   @0x37
-        bic zrf, $flN           @ reset subtract
-        bic zrf, $flH           @ reset half-carry
+        bic zrf, $flNH          @ reset subtract and half-carry
         orr zrf, $flC           @ set carry
 
         add zil, $1
@@ -1059,8 +1057,7 @@ opLDAn:  @0x3E
         b cpu_inst_r
 
 opCCF:   @0x3F
-        bic zrf, $flN           @ reset subtract
-        bic zrf, $flH           @ reset half-carry
+        bic zrf, $flNH          @ reset subtract and half-carry
         eor zrf, $flC           @ complement carry
 
         add zil, $1
@@ -3023,14 +3020,14 @@ opRETC:  @0xD8
         b cpu_inst_r
 
 opRETI:  @0xD9
-        orr zil, $(intE << intO)
-
         lsr r0, zsp, $0x10
         bl mmu_rh
 
         add zsp, $0x00020000
 
         lsl zpc, r0, $0x10
+
+        orr zil, $(intE << intO)
 
         add zil, $2
         b cpu_inst_r
@@ -3163,26 +3160,22 @@ opR20H:  @0xE7
 opASPn:  @0xE8
         bl mmu_ri1
 
-        @@@@ TEMP: get zsp in lower @@@@
-        lsr zsp, $0x10
-
-        add r1, r0, zsp
+        lsl r0, $0x18
+        asr r0, $0x08
 
         eor zrf, zrf            @ reset all flags
 
+        adds r1, r0, zsp
+
         eor r0, r0, zsp
         eor r0, r0, r1          @ XOR all three
-        tst r0, $0x10           @ if bit 4 is set
+        tst r0, $0x100000       @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r0, $0x100          @ if bit 8 is set
+        tst r0, $0x1000000      @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        bics zsp, r1, $0xFF0000         @ clear any carried bit(s)
-        orreq zrf, $flZ                 @ set zero
-
-        @@@@ TEMP: return zsp to upper @@@@
-        lsl zsp, $0x10
+        mov zsp, r1
 
         add zil, $4
         add zpc, $0x00020000
@@ -3300,31 +3293,23 @@ opR30H:  @0xF7
 
 opLDHLSn:@0xF8
         @ NOTE: The docs are pretty unclear on the flags here.
-        @ I'm guessing it is treated like a typical 16-bit add.
+        @ I'm guessing it is treated like a typical 8-bit signed add.
 
         bl mmu_ri1
+        lsl r0, $0x18
+        asr r0, $0x08
 
         eor zrf, zrf            @ reset all flags
 
-        @@@@ TEMP: get zsp in lower @@@@
-        lsr zsp, $0x10
+        add zhl, zsp, r0
 
-        lsl r0, $0x18
-        asr r0, $0x18
-        add r1, zsp, r0
-
-        eor r0, r0, zsp
-        eor r0, r0, r1          @ XOR all three
-        tst r0, $0x1000         @ if bit 12 is set
+        eor r0, zsp
+        eor r0, zhl             @ XOR all three
+        tst r0, $0x100000       @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
-        tst r0, $0x10000        @ if bit 16 is set
+        tst r0, $0x1000000      @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
-
-        lsl zhl, r1, $0x10
-
-        @@@@ TEMP: return zsp to upper @@@@
-        lsl zsp, $0x10
 
         add zil, $3
         add zpc, $0x00020000
