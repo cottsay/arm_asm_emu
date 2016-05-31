@@ -111,6 +111,18 @@ input_step:
         ldrh r1, [r1, $0x0A]
         mov r0, $0x00
 
+        cmp r1, $0x2b   @ \ (A)
+        moveq r0, $0x01
+
+        cmp r1, $0x1b   @ ] (B)
+        moveq r0, $0x02
+
+        cmp r1, $0x2b   @ ' (Select)
+        moveq r0, $0x04
+
+        cmp r1, $0x2b   @ Enter (Start)
+        moveq r0, $0x08
+
         cmp r1, $0x11   @ W (Up)
         moveq r0, $0x40
 

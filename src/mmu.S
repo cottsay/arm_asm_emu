@@ -225,7 +225,10 @@ mmu_input_update:
         ldr r0, =input
         strb r1, [r0]
 
-        mov pc, lr
+        @ Update the register
+        ldr r1, =inpt
+        ldrb r0, [r1]
+        b wopINPT
 
         .global mmu_int
 mmu_int:
@@ -351,7 +354,10 @@ wopMISC:
         cmp r1, $0x0F000000
         blo wopNOP
 
-        and r1, r0, $0x00FF0000
+        ands r1, r0, $0x00FF0000
+
+        @ Check for INPT
+        beq wopINPT
 
         @ Check for INTE
         cmp r1, $0x00FF0000
@@ -374,17 +380,18 @@ wopMISC:
          * written to it, so we update it whenever it is written to.
          */
 wopINPT:
-        bic r0, $0xCF
+        bic r0, $0xC0
+        orr r0, $0x0F
 
         ldr r1, =input
         ldrb r1, [r1]
 
         tst r0, $0x20
-        orrne r0, r1, lsr $0x04
+        bicne r0, r1, lsr $0x04
 
         tst r0, $0x10
         andne r1, $0x0F
-        orrne r0, r1
+        bicne r0, r1
 
         ldr r1, =inpt
         strb r0, [r1]
