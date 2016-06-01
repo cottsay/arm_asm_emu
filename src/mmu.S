@@ -40,28 +40,38 @@
 
         .include "reg.S"
 
+        .equ ram, (_ram - 0xE000)
+        .equ mem, (_mem - 0x8000)
         .equ inpt, (mem + 0xFF00)
         .equ timr, (mem + 0xFF04)
         .equ intf, (mem + 0xFF0F)
         .equ inte, (mem + 0xFFFF)
 
+        .equ ctyp, (rom + 0x0147)
+
         .bss
 
-mem:    .space 65536
-input:  .space 1
-        .align
+rom:    .space 0x200000
+_ram:   .space 0x20000
+_mem:   .space 0x8000
 
-readop: .space 16
-writeop:.space 16
+readop: .space 0x10
+writeop:.space 0x10
+
+ram_off:.space 0x01
+rom_off:.space 0x01
+input:  .space 0x01
+
+        .align
 
         .text
 
 bios:   .ifdef EMBED_BIOS
-        .incbin "bios.rom", 0, 256
+        .incbin "bios.rom", 0x00, 0x100
         .align
         .else
         .byte 0xC3, 0xED, 0x00
-        .space 234
+        .space 0xEA
         .byte 0x31, 0xFE, 0xFF, 0x21, 0x4D, 0x01, 0x11, 0xD8
         .byte 0x00, 0x01, 0xB0, 0x01, 0xC5, 0xF1, 0x01, 0x13
         .byte 0x00, 0xE0, 0x50
@@ -74,20 +84,25 @@ mmu_init:
         /* Set up the MMU read operation map */
         @ 0x0000 - 0x3FFF
         mov r0, $(ropBIOS - ropb)
-        orr r0, $((ropMEM - ropb) << 8)
-        orr r0, $((ropMEM - ropb) << 16)
-        orr r0, $((ropMEM - ropb) << 24)
+        orr r0, $((ropROM - ropb) << 8)
+        orr r0, $((ropROM - ropb) << 16)
+        orr r0, $((ropROM - ropb) << 24)
 
         @ 0x4000 - 0x7FFF
-        mov r1, $(ropMEM - ropb)
+        mov r1, $(ropROM - ropb)
         orr r1, r1, lsl $0x08
         orr r1, r1, lsl $0x10
 
         @ 0x8000 - 0xBFFF
-        mov r2, r1
+        mov r2, $(ropMEM - ropb)
+        orr r2, $((ropMEM - ropb) << 8)
+        orr r2, $((ropNOP - ropb) << 16)
+        orr r2, $((ropNOP - ropb) << 24)
 
         @ 0xC000 - 0xFFFF
-        mov r3, r1
+        mov r3, $(ropMEM - ropb)
+        orr r3, r3, lsl $0x08
+        orr r3, r3, lsl $0x10
 
         ldr r4, =readop
         stmea r4, {r0-r3}
@@ -103,20 +118,70 @@ mmu_init:
 
         @ 0x8000 - 0xBFFF
         mov r2, $(wopMEM - wopb)
-        orr r2, r2, lsl $0x08
-        orr r2, r2, lsl $0x10
+        orr r2, $((wopMEM - wopb) << 8)
+        orr r2, $((wopNOP - wopb) << 16)
+        orr r2, $((wopNOP - wopb) << 24)
 
         @ 0xC000 - 0xFFFF
         mov r3, $(wopWRAME - wopb)
-        orr r3, r3, lsl $0x10
         orr r3, $((wopWRAMO - wopb) << 8)
+        orr r3, $((wopWRAME - wopb) << 16)
         orr r3, $((wopMISC - wopb) << 24)
 
         ldr r4, =writeop
         stmea r4, {r0-r3}
 
+        ldr r0, =ctyp
+        ldrb r0, [r0]
+        cmp r0, $0x01
+        blo mmu_init_ctype_ret
+        beq mmu_init_ctype_01
+        cmp r0, $0x03
+        blo mmu_init_ctype_02
+
+        @ Unsupported cartridge type - fall back on type 0x02
+        b mmu_init_ctype_02
+
+mmu_init_ctype_ret:
         ldmfd sp!, {r2-r4}
         mov pc, lr
+
+mmu_init_ctype_02:
+        @ Initialize to RAM bank 0
+        mov r0, $0x00
+        ldr r1, =ram_off
+        strb r0, [r1]
+
+        @ 0x0000 - 0x1FFF
+        mov r0, $(wopMBC1RAM - wopb)
+        orr r0, r0, lsl $0x08
+
+        ldr r1, =writeop
+        strh r0, [r1]
+
+mmu_init_ctype_01:
+        @ Initialize to ROM bank 1
+        mov r0, $0x00
+        ldr r1, =rom_off
+        strb r0, [r1]
+
+        @ 0x4000 - 0x7FFF
+        mov r0, $(ropROMB - ropb)
+        orr r0, r0, lsl $0x08
+        orr r0, r0, lsl $0x10
+
+        ldr r1, =readop
+        str r0, [r1, $0x04]
+
+        @ 0x2000 - 0x5FFF
+        mov r0, $(wopMBC1ROM - wopb)
+        orr r0, $((wopMBC1ROMu - wopb) << 16)
+        orr r0, r0, lsl $0x08
+
+        ldr r1, =writeop
+        str r0, [r1, $0x02]
+
+        b mmu_init_ctype_ret
 
         .global mmu_load
 mmu_load:
@@ -131,8 +196,8 @@ mmu_load:
         blt mmu_load_end
 
         /* Read the program */
-        ldr r1, =mem
-        mov r2, $0x8000
+        ldr r1, =rom
+        mov r2, $0x200000
         mov r7, $3
         svc $0
 
@@ -248,7 +313,7 @@ mmu_sint:
         strb r0, [r1]
         mov pc, lr
 
-        /* MMU BASE OPERATION DISPATCH */
+        /* MMU READ OPERATIONS */
 
         .global mmu_rb
 mmu_rb:
@@ -258,27 +323,11 @@ mmu_rb:
         nop
 ropb:
 
-        .global mmu_wb
-mmu_wb:
-        ldr r1, =writeop
-        ldrb r1, [r1, r0, lsr $0x1C]
-        add pc, r1
-        nop
-wopb:
-
-        /* MMU OPERATIONS */
-
         /*!
          * \brief Always read zero
          */
 ropNOP:
         mov r0, $0x00
-        mov pc, lr
-
-        /*!
-         * \brief Do nothing
-         */
-wopNOP:
         mov pc, lr
 
         /*!
@@ -290,8 +339,24 @@ wopNOP:
          */
 ropBIOS:
         cmp r0, $0x0100
-        ldrhs r1, =mem
+        ldrhs r1, =rom
         ldrlo r1, =bios
+        ldrb r0, [r1, r0]
+        mov pc, lr
+
+       /*!
+        * \brief Banked ROM read
+        */
+ropROMB:
+        ldr r1, =rom_off
+        ldrb r1, [r1]
+        add r0, r1, lsl $0x0E
+
+        /*!
+         * \brief Generic ROM read
+         */
+ropROM:
+        ldr r1, =rom
         ldrb r0, [r1, r0]
         mov pc, lr
 
@@ -306,10 +371,126 @@ ropMEM:
         mov pc, lr
 
         /*!
+         * \brief Banked external RAM read
+         */
+ropERAMB:
+        ldr r1, =ram_off
+        ldrb r1, [r1]
+        add r0, r1, lsl $0x0D
+
+        /*!
+         * \brief External RAM read
+         */
+ropERAM:
+        ldr r1, =ram
+        ldrb r0, [r1, r0]
+        mov pc, lr
+
+        /* MMU WRITE OPERATIONS */
+
+        .global mmu_wb
+mmu_wb:
+        ldr r1, =writeop
+        ldrb r1, [r1, r0, lsr $0x1C]
+        add pc, r1
+        nop
+wopb:
+
+        /*!
+         * \brief Do nothing
+         */
+wopNOP:
+        mov pc, lr
+
+        /*!
+         * \brief RAM enable switch for MBC1
+         */
+wopMBC1RAM:
+        and r0, $0x0F
+        cmp r0, $0x0A
+
+        @ 0xA000 - 0xBFFF
+        moveq r0, $(ropERAMB - ropb)
+        orreq r0, $((wopERAMB - wopb) << 16)
+        movne r0, $(ropNOP - ropb)
+        orrne r0, $((wopNOP - wopb) << 16)
+
+        orr r0, r0, lsl $0x08
+
+        ldr r1, =readop
+        strh r0, [r1, $0x0A]
+
+        ror r0, $0x10
+
+        ldr r1, =writeop
+        strh r0, [r1, $0x0A]
+
+        mov pc, lr
+
+        /*!
+         * \brief ROM bank switch for MBC1
+         */
+wopMBC1ROM:
+        ands r0, $0x1F
+        subne r0, $0x01
+
+        ldr r1, =rom_off
+        ldrb r1, [r1]
+
+        bic r1, $0x1F
+        orr r0, r1
+
+        ldr r1, =rom_off
+        strb r0, [r1]
+
+        mov pc, lr
+
+        /*!
+         * \brief ROM bank switch for MBC1
+         */
+wopMBC1ROMu:
+        and r0, $0x03
+
+        ldr r1, =rom_off
+        ldrb r1, [r1]
+
+        bic r1, $0xE0
+        orr r0, r1, r0, lsl $0x05
+
+        ldr r1, =rom_off
+        strb r0, [r1]
+
+        mov pc, lr
+
+        /*!
          * \brief Generic memory write
          */
 wopMEM:
         ldr r1, =mem
+        strb r0, [r1, r0, lsr $0x10]
+        mov pc, lr
+
+        /*!
+         * \brief Banked external RAM read
+         */
+wopERAMB:
+        lsr r1, r0, $0x10
+        orr r1, r0, lsl $0x18
+        ror r0, r1, $0x18
+
+        ldr r1, =ram_off
+        ldrb r1, [r1]
+        add r0, r1, lsl $0x15
+
+        ldr r1, =ram
+        strb r0, [r1, r0, lsr $0x08]
+        mov pc, lr
+
+        /*!
+         * \brief External RAM read
+         */
+wopERAM:
+        ldr r1, =ram
         strb r0, [r1, r0, lsr $0x10]
         mov pc, lr
 
@@ -408,7 +589,7 @@ wopBSWP:
         cmp r1, $0x00010000
         movne pc, lr
 
-        mov r0, $(ropMEM - ropb)
+        mov r0, $(ropROM - ropb)
         ldr r1, =readop
         strb r0, [r1]
 
