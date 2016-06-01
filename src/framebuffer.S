@@ -211,7 +211,7 @@ display_renderline:
         bl mmu_rb
         lsl r0, $0x01
         ldrh r0, [r9, r0]
-        orr r0, r5, lsl $0x01
+        orr r0, r5, r0, lsl $0x01
 
         /* Discard unneeded bits of this cell, store running cells in r12 */
         lsr r12, r0, r4
@@ -250,7 +250,7 @@ display_rendertile:
         bl mmu_rb
         lsl r0, $0x01
         ldrh r0, [r9, r0]
-        orr r0, r5, lsl $0x01
+        orr r0, r5, r0, lsl $0x01
 
         /* OR-in this tile after the previous tile's last bit */
         orr r12, r0, lsl r4
@@ -298,32 +298,33 @@ display_putline:
 do_sixteen:
         mov r4, $0x04
         ldr r5, [r1]
+        ror r5, $0x1F
 
         /* r4 is sub-counter, r5 is source value */
 do_four:
-        and r6, r5, $0x03
+        and r6, r5, $0x06
         lsr r6, r10, r6
         and r6, $0x03
         ldr r6, [r2, r6, lsl $0x02]
-        lsr r5, $0x02
+        ror r5, $0x02
 
-        and r7, r5, $0x03
+        and r7, r5, $0x06
         lsr r7, r10, r7
         and r7, $0x03
         ldr r7, [r2, r7, lsl $0x02]
-        lsr r5, $0x02
+        ror r5, $0x02
 
-        and r8, r5, $0x03
+        and r8, r5, $0x06
         lsr r8, r10, r8
         and r8, $0x03
         ldr r8, [r2, r8, lsl $0x02]
-        lsr r5, $0x02
+        ror r5, $0x02
 
-        and r9, r5, $0x03
+        and r9, r5, $0x06
         lsr r9, r10, r9
         and r9, $0x03
         ldr r9, [r2, r9, lsl $0x02]
-        lsr r5, $0x02
+        ror r5, $0x02
 
         stmia r0!, {r6-r9}
 
