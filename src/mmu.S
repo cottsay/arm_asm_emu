@@ -42,9 +42,13 @@
 
         .equ ram, (_ram - 0xE000)
         .equ mem, (_mem - 0x8000)
+        .equ tset, (mem + 0x8000)
+        .equ tmap, (mem + 0x9800)
+        .equ oam, (mem + 0xFE00)
         .equ inpt, (mem + 0xFF00)
         .equ timr, (mem + 0xFF04)
         .equ intf, (mem + 0xFF0F)
+        .equ lcdc, (mem + 0xFF40)
         .equ inte, (mem + 0xFFFF)
 
         .equ ctyp, (rom + 0x0147)
@@ -130,6 +134,10 @@ mmu_init:
 
         ldr r4, =writeop
         stmea r4, {r0-r3}
+
+        ldr r0, =intf
+        mov r1, $0x01
+        strb r1, [r0]
 
         ldr r0, =ctyp
         ldrb r0, [r0]
@@ -239,6 +247,7 @@ mmu_rih1:
 mmu_rif:
         ldr r0, =intf
         ldrb r0, [r0]
+        and r0, $intM
         mov pc, lr
 
         .global mmu_rt
@@ -311,6 +320,46 @@ mmu_sint:
         bic r0, r1, r0
         ldr r1, =intf
         strb r0, [r1]
+        mov pc, lr
+
+        .global mmu_rg
+mmu_rg:
+        ldr r0, =lcdc
+
+        /* Palettes to r4 */
+        ldr r4, [r0, $0x07]
+        bic r4, $0xFF000000
+
+        /* LCDC to r3 */
+        ldrb r3, [r0]
+
+        /* SCX to r2 */
+        ldrb r2, [r0, $0x03]
+
+        /* SCY to r1 */
+        ldrb r1, [r0, $0x02]
+
+        /* LY to r0 */
+        ldrb r0, [r0, $0x04]
+
+        mov pc, lr
+
+        .global mmu_rgt
+mmu_rgt:
+        ldr r1, =tset
+        ldrh r0, [r1, r0]
+        mov pc, lr
+
+        .global mmu_rgm
+mmu_rgm:
+        ldr r1, =tmap
+        ldrb r0, [r1, r0]
+        mov pc, lr
+
+        .global mmu_rgs
+mmu_rgs:
+        ldr r1, =oam
+        ldr r0, [r1, r0, lsl $0x02]
         mov pc, lr
 
         /* MMU READ OPERATIONS */
@@ -551,6 +600,10 @@ wopMISC:
         cmp r1, $0x00500000
         beq wopBSWP
 
+        @ Check for INTF
+        cmp r1, $0x000F0000
+        beq wopINTF
+
         @ Fall back to simple write
         b wopMEM
 
@@ -594,6 +647,15 @@ wopBSWP:
         strb r0, [r1]
 
         mov pc, lr
+
+        /*!
+         * \brief Special write routine for INTF
+         *
+         * The upper 3 bits of this register are always set.
+         */
+wopINTF:
+        orr r0, $0xE0
+        b wopMEM
 
         /*!
          * \brief Special write routine for INTE
