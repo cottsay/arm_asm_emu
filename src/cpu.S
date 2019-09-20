@@ -189,8 +189,15 @@ cpu_int:
         .global cpu_step
 cpu_step:
         /* Process interrupts */
-        cmp zil, $0x84000000
-        bhs cpu_int
+        tst zil, $(intM << intO)
+        bicne zil, $0x02000000
+        tstne zil, $(intE << intO)
+        bne cpu_int
+
+        /* Loop for HALT/STOP */
+        tst zil, $0x03000000
+        addne zil, $1
+        bne cpu_ret
 
         /* Load Instruction */
         bl mmu_ri
@@ -428,7 +435,7 @@ opRRCA:  @0x0F
         b cpu_inst_r
 
 opSTOP:  @0x10
-        @ TODO: Wait for button press
+        orr zil, $0x01000000
 
         add zil, $1
         add zpc, $0x00010000
@@ -1468,7 +1475,7 @@ opLDHLL: @0x75
         b cpu_inst_r
 
 opHALT:  @0x76
-        @ TODO: Wait for interrupt
+        orr zil, $0x02000000
 
         add zil, $1
         add zpc, $0x00010000

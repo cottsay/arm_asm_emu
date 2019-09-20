@@ -144,6 +144,7 @@ input_step:
         bl mmu_input_update
 
         movne r0, $intJ
+        bicne zil, $0x01000000
         blne mmu_int
 
 input_step_ret:
