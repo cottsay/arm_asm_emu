@@ -41,7 +41,10 @@
         .bss
 
 morton: .space 512
-render: .space 40
+linesp0:.space 44
+linebg: .space 40
+linesp1:.space 44
+linest: .space 4
 display:.space 4
 llen:   .space 4
 
@@ -104,7 +107,7 @@ display_init_morton:
         mov r4, r0
 
         /* Get the line length using ioctl */
-        sub sp, $0x46
+        sub sp, $0x44
 
         mov r1, $0x4600
         add r1, $0x0002
@@ -112,11 +115,11 @@ display_init_morton:
         mov r7, $0x36
         swi $0
 
-        ldr r2, [sp, $44]
+        ldr r2, [sp, $0x2C]
         ldr r0, =llen
         str r2, [r0]
 
-        add sp, $0x46
+        add sp, $0x44
 
         /* Map the display */
         mov r0, $0x00
@@ -135,209 +138,346 @@ display_init_morton:
 
         ldmfd sp!, {r2-r12, pc}
 
-        .global display_renderline
-display_renderline:
+        .global display_rendersprites
+display_rendersprites:
         stmfd sp!, {r1-r12, lr}
 
-        mov r12, $0xFF00
+        /*
+         * r0: Line
+         * r1: SCY
+         * r2: SCX
+         * r3: LCDC
+         * r4: Palettes
+         */
+        bl mmu_rg
 
-        /* Load Y pos in r2 */
-        orr r0, r12, $0x0042
-        bl mmu_rb
-        mov r2, r0
+        /* Offset line by 16 */
+        add r2, r0, $0x10
 
-        /* Load X pos in r3 */
-        orr r0, r12, $0x0043
-        bl mmu_rb
-        mov r3, r0
+        /* Skip the BG palette */
+        lsr r4, $0x08
 
-        /* Load line number in r4 */
-        orr r0, r12, $0x0044
-        bl mmu_rb
-        mov r4, r0
+        /* Start at tile 39 */
+        mov r5, $0x28
 
-        /* Load status in r6 */
-        orr r0, r12, $0x0040
-        bl mmu_rb
-        mov r6, r0
+        /* Load the morton table */
+        ldr r8, =morton
 
-        /* Put map base in r7 */
-        tst r6, $0x08
-        movne r7, $0x9C00
-        moveq r7, $0x9800
+        /* Main Tile Loop
+         * r2: Line
+         * r3: LCDC
+         * r4: Palettes
+         * r5: Current sprite ID
+         * r8: Morton table
+         */
+display_render_sprite:
+        subs r5, $0x01
+        bmi display_render_sprite_done
 
-        /* Put tile base in r8 */
-        tst r6, $0x10
-        movne r8, $0x8000
-        moveq r8, $0x8800
+        /* Load the attributes in r0 */
+        mov r0, r5
+        bl mmu_rgs
 
-        /* Correct map offset, put line within tile in r2 */
-        add r2, r4
-        and r2, $0xFF
-        lsr r9, r2, $0x03
-        add r7, r9, lsl $0x05
+        /* Put line within sprite in r6 */
+        and r6, r0, $0x00FF
+        rsbs r6, r2
+        bmi display_render_sprite
+        cmp r6, $0x08
+        bhs display_render_sprite
+
+        /* Put X in r7 */
+        ands r7, r0, $0xFF00
+        cmpne r7, $0xA8
+        bge display_render_sprite
+
+        /* Flip Y (if necessary) */
+        tst r0, $0x40000000
+        rsbne r6, $0x08
+
+        /* Load the appropriate line addr in r8 */
+        tst r0, $0x80000000
+        ldreq r8, =linesp0
+        ldrne r8, =linesp1
+
+        @ TODO: X FLIP
+
+        /* Load the tile */
+        lsr r0, $0x10
+        and r0, $0xFF
+        add r0, r6, lsl $0x01
+        bl mmu_rgt
+
+        /* Interleave the bits */
+        and r1, r0, $0xFF
+        lsl r1, $0x01
+        lsr r0, $0x08
+        lsl r0, $0x01
+        ldrh r0, [r8, r0]
+        ldrh r1, [r8, r1]
+        orr r0, r1, r0, lsl $0x01
+
+        /* Put the 8-pixel-block offset in r1 */
+        lsr r1, r7, $0x03
+        and r7, $0x07
+
+        /* Load the current sprite data into lr */
+        ldr lr, [r8, r1, lsl $0x01]
+
+        /* Mask out the old data */
+        mov r9, $0xFF
+        orr r9, r9, lsl $0x08
+        bic lr, r9, lsl r7
+
+        @ TODO: Resolve the palette
+
+        /* OR-in the new tile */
+        @orr lr, r0, lsl r7
+        orr lr, r9, lsl r7
+
+        /* Store the modified data back to the line */
+        str lr, [r8, r1, lsl $0x01]
+
+        b display_render_sprite
+display_render_sprite_done:
+
+        ldmfd sp!, {r1-r12, pc}
+
+        .global display_renderbg
+display_renderbg:
+        stmfd sp!, {r1-r10, lr}
+
+        /*
+         * r0: Line
+         * r1: SCY
+         * r2: SCX
+         * r3: LCDC
+         * r4: Palettes
+         */
+        bl mmu_rg
+
+        /* Fix SCY based on current line */
+        add r1, r0
+        and r1, $0xFF
+
+        /* Save the line state (palettes and line number) */
+        orr r4, r0, lsl $0x18
+        ldr lr, =linest
+        str r4, [lr]
+
+        /* Put map base in r5 */
+        tst r3, $0x08
+        movne r5, $0x0400
+        moveq r5, $0x0000
+
+        /* Put tile base in r6 */
+        tst r3, $0x10
+        movne r6, $0x0000
+        moveq r6, $0x0800
+
+        /* Correct map and tile base from SCY */
+        lsr r0, r1, $0x03
+        add r5, r0, lsl $0x05
+        and r1, $0x07
+        add r6, r1, lsl $0x01
+
+        /* Put map column in r7 */
+        lsr r7, r2, $0x03
+
+        /* Put tile column in r2 */
         and r2, $0x07
         lsl r2, $0x01
 
-        /* Correct tile line */
-        add r8, r2
+        /* Load morton table in r8 */
+        ldr r8, =morton
 
-        /* Put map X offset in r3, put column within tile in r4 */
-        and r4, r3, $0x07
-        lsl r4, $0x01
-        lsr r3, $0x03
+        /* Load line address in r9 */
+        ldr r9, =linebg
 
-        /* BEGIN LOAD */
+        /* Not including initial tile, repeat 20 times */
+        mov r10, $0x14
+
+        /* BG Line Render Loop
+         * r2: Tile column offset
+         * r3: LCDC
+         * r4: Running tile
+         * r5: Map base
+         * r6: Tile base
+         * r7: Map column
+         * r8: Morton table
+         * r9: Destination line address
+         * r10: Loop counter
+         */
 
         /* Load the first map cell */
-        add r0, r7, r3
-        bl mmu_rb
+        add r0, r5, r7
+        bl mmu_rgm
 
         /* Load the corresponding tile */
-        tst r6, $0x10
+        tst r3, $0x10
         eoreq r0, $0x80
         lsl r0, $0x04
-
-        add r2, r0, r8
+        add r0, r6
+        bl mmu_rgt
 
         /* Interleave the bits */
-        ldr r9, =morton
-        mov r0, r2
-        bl mmu_rb
+        and r1, r0, $0xFF
+        lsl r1, $0x01
+        lsr r0, $0x08
         lsl r0, $0x01
-        ldrh r5, [r9, r0]
+        ldrh r0, [r8, r0]
+        ldrh r1, [r8, r1]
+        orr r0, r1, r0, lsl $0x01
 
-        add r0, r2, $0x01
-        bl mmu_rb
-        lsl r0, $0x01
-        ldrh r0, [r9, r0]
-        orr r0, r5, r0, lsl $0x01
-
-        /* Discard unneeded bits of this cell, store running cells in r12 */
-        lsr r12, r0, r4
+        /* Discard unneeded bits of this cell */
+        lsr r4, r0, r2
 
         /* From now on, we will shift in the other direction */
-        rsb r4, $0x10
+        rsb r2, $0x10
 
-        /* Load destination into r10 */
-        ldr r10, =render
-
-        /* Initial value is in r12. Now we do this 20 times */
-        mov r11, $0x14
-display_rendertile:
+display_renderbg_tile:
         /* Move to next tile (and wrap) */
-        add r3, $0x01
-        and r3, $0x1F
+        add r7, $0x01
+        and r7, $0x1F
 
         /* Load the next map cell */
-        add r0, r7, r3
-        bl mmu_rb
+        add r0, r5, r7
+        bl mmu_rgm
 
         /* Load the corresponding tile */
-        tst r6, $0x10
+        tst r3, $0x10
         eoreq r0, $0x80
         lsl r0, $0x04
-
-        add r2, r0, r8
+        add r0, r6
+        bl mmu_rgt
 
         /* Interleave the bits */
-        mov r0, r2
-        bl mmu_rb
+        and r1, r0, $0xFF
+        lsl r1, $0x01
+        lsr r0, $0x08
         lsl r0, $0x01
-        ldrh r5, [r9, r0]
+        ldrh r0, [r8, r0]
+        ldrh r1, [r8, r1]
+        orr r0, r1, r0, lsl $0x01
 
-        add r0, r2, $0x01
-        bl mmu_rb
-        lsl r0, $0x01
-        ldrh r0, [r9, r0]
-        orr r0, r5, r0, lsl $0x01
+        /* OR this tile after the previous tile's last bit */
+        orr r4, r0, lsl r2
 
-        /* OR-in this tile after the previous tile's last bit */
-        orr r12, r0, lsl r4
-
-        /* Store the rendered bits */
-        strh r12, [r10]
-        add r10, $0x02
-
-        /* Shift out the stored bits */
-        lsr r12, $0x10
+        /* Store the newly rendered tile */
+        strh r4, [r9], $0x02
+        lsr r4, $0x10
 
         /* Repeat */
-        subs r11, $0x01
-        bne display_rendertile
+        subs r10, $0x01
+        bne display_renderbg_tile
 
-        ldmfd sp!, {r1-r12, pc}
+        ldmfd sp!, {r1-r10, pc}
 
         .global display_putline
 display_putline:
         stmfd sp!, {r1-r12, lr}
 
-        /* Load palette in r10 */
-        /* TODO: Should this be fetched during renderline? */
-        mov r2, $0xFF00
-        orr r0, r2, $0x0047
-        bl mmu_rb
-        mov r10, r0
-
-        /* Get the line number */
-        orr r0, r2, $0x0044
-        bl mmu_rb
+        /* Get line in r0, palettes in r4 */
+        ldr r2, =linest
+        ldr r2, [r2]
+        lsr r0, r2, $0x18
 
         ldr r1, =display
         ldr r1, [r1]
-        ldr r2, =llen
-        ldr r2, [r2]
+        ldr r4, =llen
+        ldr r4, [r4]
+        //lsr r4, $0x02
 
-        mul r0, r2
+        mul r0, r4
         add r0, r1
-        ldr r1, =render
-        ldr r2, =palette
-        mov r3, $0x0A
+        ldr r1, =palette
+        ldr r4, =linesp0
+        ldr r5, =linebg
+        ldr r6, =linesp1
+        mov r3, $0x28
 
-        /* r0 is dest, r1 is source, r2 is palette, r3 is counter */
-do_sixteen:
-        mov r4, $0x04
-        ldr r5, [r1]
-        ror r5, $0x1F
+        /*
+         * r0: Destination in framebuffer
+         * r1: 32-bit palette
+         * r2: Remap palettes
+         * r3: Loop counter
+         * r4: Sprite 0 line source
+         * r5: Background line source
+         * r6: Sprite 1 line source
+         */
+display_put_sixteen:
+        ldr r7, [r4], $0x04
+        ldr r8, [r5], $0x04
+        ldr r9, [r6], $0x04
+        ror r7, $0x1F
+        ror r8, $0x1F
+        ror r9, $0x1F
 
-        /* r4 is sub-counter, r5 is source value */
-do_four:
-        and r6, r5, $0x06
-        lsr r6, r10, r6
-        and r6, $0x03
-        ldr r6, [r2, r6, lsl $0x02]
-        ror r5, $0x02
+        /*
+         * r7: Sprite 0 value
+         * r8: Background value
+         * r9: Sprite 1 value
+         */
+display_put_four:
+        ands r10, r7, $0x03
+        andeq r10, r8, $0x06
+        lsreq r10, r2, r10
+        andeqs r10, $0x03
+        andeq r10, r9, $0x03
+        ldr r10, [r1, r10, lsl $0x02]
+        ror r7, $0x02
+        ror r8, $0x02
+        ror r9, $0x02
 
-        and r7, r5, $0x06
-        lsr r7, r10, r7
-        and r7, $0x03
-        ldr r7, [r2, r7, lsl $0x02]
-        ror r5, $0x02
+        ands r11, r7, $0x03
+        andeq r11, r8, $0x06
+        lsreq r11, r2, r11
+        andeqs r11, $0x03
+        andeq r11, r9, $0x03
+        ldr r11, [r1, r11, lsl $0x02]
+        ror r7, $0x02
+        ror r8, $0x02
+        ror r9, $0x02
 
-        and r8, r5, $0x06
-        lsr r8, r10, r8
-        and r8, $0x03
-        ldr r8, [r2, r8, lsl $0x02]
-        ror r5, $0x02
+        ands r12, r7, $0x03
+        andeq r12, r8, $0x06
+        lsreq r12, r2, r12
+        andeqs r12, $0x03
+        andeq r12, r9, $0x03
+        ldr r12, [r1, r12, lsl $0x02]
+        ror r7, $0x02
+        ror r8, $0x02
+        ror r9, $0x02
 
-        and r9, r5, $0x06
-        lsr r9, r10, r9
-        and r9, $0x03
-        ldr r9, [r2, r9, lsl $0x02]
-        ror r5, $0x02
+        ands lr, r7, $0x03
+        andeq lr, r8, $0x06
+        lsreq lr, r2, lr
+        andeqs lr, $0x03
+        andeq lr, r9, $0x03
+        ldr lr, [r1, lr, lsl $0x02]
+        ror r7, $0x02
+        ror r8, $0x02
+        ror r9, $0x02
 
-        stmia r0!, {r6-r9}
+        stmia r0!, {r10-r12, lr}
 
-        subs r4, $0x01
-        bne do_four
+        sub r3, $0x01
+        tst r3, $0x03
+        bne display_put_four
 
-        subs r3, $0x01
-        addne r1, $0x04
-        bne do_sixteen
+        cmp r3, $0x00
+        bne display_put_sixteen
+
+        bl lines_clear
 
         ldmfd sp!, {r1-r12, pc}
 
 display_clear:
+        ldr r0, =linest
+        mov r1, $0xE4
+        orr r1, r1, lsl $0x08
+        orr r1, r1, lsl $0x08
+        str r1, [r0]
+
         ldr r0, =display
         ldr r0, [r0]
         mov r1, $0x00
@@ -346,28 +486,41 @@ display_clear:
         ldr r4, =llen
         ldr r4, [r4]
 
-clear_pixel:
+pixel_clear:
         str r3, [r0, r2, lsl $0x02]
         add r2, $0x01
         cmp r2, $0xA0
-        blo clear_pixel
+        blo pixel_clear
 
         add r0, r4
         mov r2, $0x00
 
         add r1, $0x01
         cmp r1, $0x90
-        blo clear_pixel
+        blo pixel_clear
 
-        ldr r0, =render
+lines_clear:
         mov r1, $0x00
         mov r2, $0x00
         mov r3, $0x00
 
+        ldr r0, =linesp0
+        stmea r0!, {r1-r3}
+        stmea r0!, {r1-r3}
+        stmea r0!, {r1-r3}
+        stmea r0!, {r1-r2}
+
+        ldr r0, =linebg
         stmea r0!, {r1-r3}
         stmea r0!, {r1-r3}
         stmea r0!, {r1-r3}
         str r1, [r0]
+
+        ldr r0, =linesp1
+        stmea r0!, {r1-r3}
+        stmea r0!, {r1-r3}
+        stmea r0!, {r1-r3}
+        stmea r0!, {r1-r2}
 
         mov pc, lr
 

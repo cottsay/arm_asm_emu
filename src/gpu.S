@@ -60,9 +60,13 @@ gpu_step:
         /* Display rendered line if ending HBlank */
         bleq display_putline
 
-        /* Render a line if ending VRAM */
+        /* Render sprite lines if ending OAM */
+        cmp lr, $0x02
+        bleq display_rendersprites
+
+        /* Render background line if ending VRAM */
         cmp lr, $0x03
-        bleq display_renderline
+        bleq display_renderbg
 
         /* Get the GPU mode alone */
         lsl lr, zil, $0x0E
