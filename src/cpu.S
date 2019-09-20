@@ -158,31 +158,27 @@ cpu_int:
         bic zil, $(intE << intO)        @ Disable interrupts
 
         sub zsp, $0x00020000
-        orr r1, zsp, zpc, lsr $0x10
-        mov zpc, r0
-        mov r0, r1
+        orr r0, zsp, zpc, lsr $0x10
         bl mmu_wh
 
-        mov r0, zpc
-
         /* Figure out which interrupt to service */
-        tst r0, $intV
+        tst zil, $(intV << intO)
         movne r0, $intV
         movne zpc, $0x00400000
 
-        tst r0, $intL
+        tst zil, $(intL << intO)
         movne r0, $intL
         movne zpc, $0x00480000
 
-        tst r0, $intT
+        tst zil, $(intT << intO)
         movne r0, $intT
         movne zpc, $0x00500000
 
-        tst r0, $intS
+        tst zil, $(intS << intO)
         movne r0, $intS
         movne zpc, $0x00580000
 
-        tst r0, $intJ
+        tst zil, $(intJ << intO)
         movne r0, $intJ
         movne zpc, $0x00600000
 
@@ -193,11 +189,8 @@ cpu_int:
         .global cpu_step
 cpu_step:
         /* Process interrupts */
-        tst zil, $(intE << intO)
-        tstne zil, $(intM << intO)
-        blne mmu_rif
-        andnes r0, zil, lsr $intO
-        bne cpu_int
+        cmp zil, $0x84000000
+        bhs cpu_int
 
         /* Load Instruction */
         bl mmu_ri

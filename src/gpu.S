@@ -43,18 +43,18 @@
         .text
 
 ziltbl:                  /*    -- Normal Transitions --    */
-        .word 0x0005EC00 /* HBlank -> OAM    (+20  cycles) */
-        .word 0x00038E00 /* VBlank -> VBlank (+114 cycles) */
-        .word 0x0000D500 /* OAM    -> VRAM   (+43  cycles) */
-        .word 0xFFFCCD00 /* VRAM   -> HBlank (+51  cycles) */
+        .word 0x0000BD80 /* HBlank -> OAM    (+20  cycles) */
+        .word 0x000071C0 /* VBlank -> VBlank (+114 cycles) */
+        .word 0x00001AA0 /* OAM    -> VRAM   (+43  cycles) */
+        .word 0xFFFF99A0 /* VRAM   -> HBlank (+51  cycles) */
                          /*    -- Special Transitions --   */
-        .word 0xFFFEA200 /* OAM    -> VBlank (+94  cycles) */
-        .word 0xFD995E00 /* VBlank -> OAM    (-94  cycles) */
+        .word 0xFFFFD440 /* OAM    -> VBlank (+94  cycles) */
+        .word 0xFFB32BC0 /* VBlank -> OAM    (-94  cycles) */
 
         .global gpu_step
 gpu_step:
         /* Get the GPU mode alone */
-        lsl lr, zil, $0x0E
+        lsl lr, zil, $0x11
         lsrs lr, $0x1E
 
         /* Display rendered line if ending HBlank */
@@ -69,7 +69,7 @@ gpu_step:
         bleq display_renderbg
 
         /* Get the GPU mode alone */
-        lsl lr, zil, $0x0E
+        lsl lr, zil, $0x11
         lsrs lr, $0x1E
 
         /* Add the corresponding transition value from ziltbl */
@@ -78,7 +78,7 @@ gpu_step:
         add zil, lr
 
         /* Get the line number alone */
-        lsl lr, zil, $0x06
+        lsl lr, zil, $0x09
         lsr lr, $0x18
 
         /* On line 144, special transition to VBlank */
@@ -97,14 +97,14 @@ gpu_step:
         bl mmu_wb
 
         /* Write GPU mode to register */
-        lsl r0, zil, $0x0E
+        lsl r0, zil, $0x11
         lsr r0, $0x1E
         orr r0, $0xFF000000
         orr r0, $0x00410000
         bl mmu_wb
 
         /* Trigger interrupt on VBlank */
-        lsl lr, zil, $0x06
+        lsl lr, zil, $0x09
         lsr lr, $0x18
         cmp lr, $0x90
         moveq r0, $intV

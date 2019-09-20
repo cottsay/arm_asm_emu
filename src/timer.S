@@ -101,12 +101,7 @@ timer_step:
         bleq mmu_int
 
 timer_step_stopped:
-        /* TODO: This really needs to be re-worked in light of the */
-        /* fact that bits 5-7 aren't used */
-        /* Only do this if all 5 bits were 0 */
-
-        tst zil, $0xF1
-        addeq zil, $0x100
+        add zil, $0x20
         b timer_ret
 
         .end

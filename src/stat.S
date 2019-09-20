@@ -169,18 +169,18 @@ stat_print:
         bl hex_print
 
         @ tc
-        and r0, r12, $0xF8
+        and r0, r12, $0x18
         lsr r0, $3
         bl hex_print
 
         @ gc
-        lsl r0, r12, $0x10
+        lsl r0, r12, $0x13
         lsr r0, $0x18
         rsb r0, $0x80
         bl hex_print
 
         @ gl
-        lsl r0, r12, $0x06
+        lsl r0, r12, $0x09
         lsr r0, $0x18
         bl hex_print
 

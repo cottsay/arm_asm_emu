@@ -309,18 +309,14 @@ mmu_int:
         ldr r1, =intf
         ldrb r1, [r1]
         orr r0, r1
-        ldr r1, =intf
-        strb r0, [r1]
-        mov pc, lr
+        b wopINTF
 
         .global mmu_sint
 mmu_sint:
         ldr r1, =intf
         ldrb r1, [r1]
         bic r0, r1, r0
-        ldr r1, =intf
-        strb r0, [r1]
-        mov pc, lr
+        b wopINTF
 
         .global mmu_rg
 mmu_rg:
@@ -654,8 +650,18 @@ wopBSWP:
          * The upper 3 bits of this register are always set.
          */
 wopINTF:
+        ldr r1, =inte
+        ldrb r1, [r1]
+
+        and r1, r0
+        and r1, $intM
+
+        bic zil, $(intM << intO)
+        orr zil, r1, lsl $intO
         orr r0, $0xE0
-        b wopMEM
+        ldr r1, =intf
+        strb r0, [r1]
+        mov pc, lr
 
         /*!
          * \brief Special write routine for INTE
@@ -664,7 +670,12 @@ wopINTF:
          * access since they are read almost every single cycle.
          */
 wopINTE:
-        and r1, r0, $intM
+        ldr r1, =intf
+        ldrb r1, [r1]
+
+        and r1, r0
+        and r1, $intM
+
         bic zil, $(intM << intO)
         orr zil, r1, lsl $intO
         ldr r1, =inte

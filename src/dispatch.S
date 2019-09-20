@@ -42,7 +42,7 @@
 
         .text
 
-ZILINIT:.word 0x023C8000
+ZILINIT:.word 0x00479000
 
         .global dispatch_init
 dispatch_init:
@@ -72,7 +72,7 @@ dispatch_stat:
         .global cpu_ret
 dispatch_step:
         /* Check GPU */
-        tst zil, $0x8000
+        tst zil, $0x1000
         bne gpu_step
 gpu_ret:
 
@@ -91,7 +91,7 @@ input_ret:
 cpu_ret:
 
         /* Increment! */
-        add zil, $0xF7
+        add zil, $0x17
 
         b dispatch_ret
 
