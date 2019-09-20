@@ -267,8 +267,8 @@ opIB:    @0x04
         eor r1, r0, zrb
         eor r1, r1, $1          @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
         orrne zrf, $flH                 @ set half-carry
+        biceq zrf, $flH                 @ reset half-carry
 
         ands zrb, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -283,11 +283,11 @@ opDB:    @0x05
 
         add r0, zrb, $0xFF      @ subtract 1
 
-        eor r1, zrb, $0xFF
-        eor r1, r1, r0          @ XOR all three
+        eor r1, zrb, r0
+        eor r1, r1, $0xFF       @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
+        bicne zrf, $flH                 @ reset half-carry
+        orreq zrf, $flH                 @ set half-carry
 
         ands zrb, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -383,8 +383,8 @@ opIC:    @0x0C
         eor r1, r0, zrc
         eor r1, r1, $1          @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
         orrne zrf, $flH                 @ set half-carry
+        biceq zrf, $flH                 @ reset half-carry
 
         ands zrc, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -399,11 +399,11 @@ opDC:    @0x0D
 
         add r0, zrc, $0xFF      @ subtract 1
 
-        eor r1, zrc, $0xFF
-        eor r1, r1, r0          @ XOR all three
+        eor r1, zrc, r0
+        eor r1, r1, $0xFF       @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
+        bicne zrf, $flH                 @ reset half-carry
+        orreq zrf, $flH                 @ set half-carry
 
         ands zrc, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -480,8 +480,8 @@ opID:    @0x14
         eor r1, r0, zrd
         eor r1, r1, $1          @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
         orrne zrf, $flH                 @ set half-carry
+        biceq zrf, $flH                 @ reset half-carry
 
         ands zrd, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -496,11 +496,11 @@ opDD:    @0x15
 
         add r0, zrd, $0xFF      @ subtract 1
 
-        eor r1, zrd, $0xFF
-        eor r1, r1, r0          @ XOR all three
+        eor r1, zrd, r0
+        eor r1, r1, $0xFF       @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
+        bicne zrf, $flH                 @ reset half-carry
+        orreq zrf, $flH                 @ set half-carry
 
         ands zrd, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -551,8 +551,8 @@ opAHLDE: @0x19
         orr r1, zre, zrd, lsl $0x08     @ put DE in r1
         add lr, r0, r1
 
-        eor r1, r1, lr
-        eor r1, r1, r0          @ XOR all three
+        eor r1, r1, r0
+        eor r1, r1, lr          @ XOR all three
         tst r1, $0x1000         @ if bit 12 is set
         orrne zrf, $flH                 @ set half-carry
         biceq zrf, $flH                 @ reset half-carry
@@ -598,8 +598,8 @@ opIE:    @0x1C
         eor r1, r0, zre
         eor r1, r1, $1          @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
         orrne zrf, $flH                 @ set half-carry
+        biceq zrf, $flH                 @ reset half-carry
 
         ands zre, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -614,11 +614,11 @@ opDE:    @0x1D
 
         add r0, zre, $0xFF      @ subtract 1
 
-        eor r1, zre, $0xFF
-        eor r1, r1, r0          @ XOR all three
+        eor r1, zre, r0
+        eor r1, r1, $0xFF       @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
+        bicne zrf, $flH                 @ reset half-carry
+        orreq zrf, $flH                 @ set half-carry
 
         ands zre, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -707,9 +707,9 @@ opIH:    @0x24
 opDH:    @0x25
         orr zrf, $flZNH         @ set zero, subtract and half-carry
 
+        tst zhl, $0x0F000000    @ if lower nibble is not completely zero
+        bicne zrf, $flH                 @ reset half-carry
         add zhl, $0xFF000000
-        teq zhl, $0x0F000000    @ if lower nibble is all set
-        biceq zrf, $flH                 @ reset half-carry
         tst zhl, $0xFF000000    @ if result is not completely zero
         bicne zrf, $flZ                 @ reset zero
 
@@ -831,9 +831,9 @@ opDL:    @0x2D
 
         ror zhl, $0x18
 
+        tst zhl, $0x0F000000    @ if lower nibble is not completely zero
+        bicne zrf, $flH                 @ reset half-carry
         add zhl, $0xFF000000
-        teq zhl, $0x0F000000    @ if lower nibble is all set
-        biceq zrf, $flH                 @ reset half-carry
         tst zhl, $0xFF000000    @ if result is not completely zero
         bicne zrf, $flZ                 @ reset zero
 
@@ -929,10 +929,10 @@ opDHLm:  @0x35
 
         lsl r0, $0x18
 
+        tst r0, $0x0F000000     @ if lower nibble is not completely zero
+        bicne zrf, $flH                 @ reset half-carry
         adds r0, $0xFF000000
         bicne zrf, $flZ                 @ reset zero
-        teq r0, $0x0F000000     @ if lower nibble is all set
-        biceq zrf, $flH                 @ reset half-carry
 
         orr r0, zhl, r0, lsr $0x18
         bl mmu_wb
@@ -1017,8 +1017,8 @@ opIA:    @0x3C
         eor r1, r0, zra
         eor r1, r1, $1          @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
         orrne zrf, $flH                 @ set half-carry
+        biceq zrf, $flH                 @ reset half-carry
 
         ands zra, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -1033,11 +1033,11 @@ opDA:    @0x3D
 
         add r0, zra, $0xFF      @ subtract 1
 
-        eor r1, zra, $0xFF
-        eor r1, r1, r0          @ XOR all three
+        eor r1, zra, r0
+        eor r1, r1, $0xFF       @ XOR all three
         tst r1, $0x10           @ if bit 4 is set
-        biceq zrf, $flH                 @ reset half-carry
-        orrne zrf, $flH                 @ set half-carry
+        bicne zrf, $flH                 @ reset half-carry
+        orreq zrf, $flH                 @ set half-carry
 
         ands zra, r0, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
@@ -1347,7 +1347,7 @@ opLDHHL: @0x66
         bl mmu_rb
 
         bic zhl, $0xFF000000
-        orr zhl, r0, lsl $0x08
+        orr zhl, r0, lsl $0x18
 
         add zil, $2
         add zpc, $0x00010000
@@ -1355,7 +1355,7 @@ opLDHHL: @0x66
 
 opLDHA:  @0x67
         bic zhl, $0xFF000000
-        orr zhl, zra, lsl $0x08
+        orr zhl, zra, lsl $0x18
 
         add zil, $1
         add zpc, $0x00010000
@@ -1411,7 +1411,7 @@ opLDLHL: @0x6E
         bl mmu_rb
 
         bic zhl, $0x00FF0000
-        orr zhl, r0, lsr $0x10
+        orr zhl, r0, lsl $0x10
 
         add zil, $2
         add zpc, $0x00010000
@@ -1901,7 +1901,7 @@ opAcAA:  @0x8F
         tst zra, $0x100         @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands r0, $0xFF                  @ clear any carried bit(s)
+        ands zra, $0xFF                 @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $1
@@ -2238,7 +2238,7 @@ opScAHL: @0x9E
         tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands zra, r0, $0xFF             @ clear any carried bit(s)
+        ands zra, r1, $0xFF             @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $2
@@ -2404,7 +2404,7 @@ opXOAL:  @0xAD
         b cpu_inst_r
 
 opXOAHL: @0xAE
-        lsr r0, zhl
+        lsr r0, zhl, $0x10
         bl mmu_rb
 
         eor zrf, zrf            @ reset all flags
@@ -2655,15 +2655,15 @@ opCAHL:  @0xBE
         add r1, $1              @ 2's compliment
         add r1, zra
 
-        eor r0, r0, zra
-        eor r0, r0, r1          @ XOR all three
+        eor r0, zra
+        eor r0, r1              @ XOR all three
         tst r0, $0x10           @ if bit 4 is set
         orrne zrf, $flH                 @ set half-carry
 
         tst r0, $0x100          @ if bit 8 is set
         orrne zrf, $flC                 @ set full-carry
 
-        ands r0, $0xFF                  @ clear any carried bit(s)
+        ands r1, $0xFF                  @ clear any carried bit(s)
         orreq zrf, $flZ                 @ set zero
 
         add zil, $2
@@ -3236,7 +3236,7 @@ opPOPAF: @0xF1
         add zsp, $0x00020000
 
         lsr zra, r0, $0x08
-        and zrf, r0, $0xFF
+        and zrf, r0, $flM
 
         add zil, $3
         add zpc, $0x00010000
@@ -3725,7 +3725,7 @@ cbRLL:   @0xCB15
         orreq zrf, $flZ                 @ set zero
 
         bic zhl, $0x00FF0000
-        orr zhl, lr, lsl $0x08
+        orr zhl, lr, lsr $0x08
 
         add zil, $2
         add zpc, $0x00010000
@@ -3993,7 +3993,7 @@ cbSLAL:  @0xCB25
         orreq zrf, $flZ                 @ set zero
 
         bic zhl, $0x00FF0000
-        orr zhl, lr, lsl $0x08
+        orr zhl, lr, lsr $0x08
 
         add zil, $2
         add zpc, $0x00010000
@@ -4121,8 +4121,9 @@ cbSRAL:  @0xCB2D
         orrcs zrf, $flC                 @ set carry
         orreq zrf, $flZ                 @ set zero
 
-        bic zhl, $0xFF000000
-        orr zhl, lr, lsl $0x18
+        lsl lr, $0x18
+        bic zhl, $0x00FF0000
+        orr zhl, lr, lsr $0x08
 
         add zil, $2
         add zpc, $0x00010000
@@ -4356,8 +4357,8 @@ cbSRLL:  @0xCB3D
         orrcs zrf, $flC                 @ set carry
         orreq zrf, $flZ                 @ set zero
 
-        bic zhl, $0xFF000000
-        orr zhl, lr, lsl $0x18
+        bic zhl, $0x00FF0000
+        orr zhl, lr, lsl $0x10
 
         add zil, $2
         add zpc, $0x00010000
