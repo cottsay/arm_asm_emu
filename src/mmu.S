@@ -49,6 +49,7 @@
         .equ timr, (mem + 0xFF04)
         .equ intf, (mem + 0xFF0F)
         .equ lcdc, (mem + 0xFF40)
+        .equ key1, (mem + 0xFF4D)
         .equ inte, (mem + 0xFFFF)
 
         .equ ctyp, (rom + 0x0147)
@@ -137,6 +138,10 @@ mmu_init:
 
         ldr r0, =intf
         mov r1, $0x01
+        strb r1, [r0]
+
+        ldr r0, =key1
+        mov r1, $0xFF
         strb r1, [r0]
 
         ldr r0, =ctyp
