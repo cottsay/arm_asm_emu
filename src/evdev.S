@@ -117,10 +117,10 @@ input_step:
         cmp r1, $0x1b   @ ] (B)
         moveq r0, $0x02
 
-        cmp r1, $0x2b   @ ' (Select)
+        cmp r1, $0x28   @ ' (Select)
         moveq r0, $0x04
 
-        cmp r1, $0x2b   @ Enter (Start)
+        cmp r1, $0x1c   @ Enter (Start)
         moveq r0, $0x08
 
         cmp r1, $0x11   @ W (Up)
