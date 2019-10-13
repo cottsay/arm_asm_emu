@@ -67,11 +67,11 @@ timer_step:
         tst r1, $0x0F
         roreq r0, $0x08
         addeq r0, $0x01000000
-        roreq r0, $0x0C
+        roreq r0, $0x18
+        bleq mmu_wt
 
         /* Timer */
         tst r0, $0x04000000
-        bleq mmu_wt
         beq timer_step_stopped
 
         /* Account for the control speed */
