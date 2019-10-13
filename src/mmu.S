@@ -46,6 +46,8 @@
         .equ tmap, (mem + 0x9800)
         .equ oam, (mem + 0xFE00)
         .equ inpt, (mem + 0xFF00)
+        .equ sb, (mem + 0xFF01)
+        .equ sc, (mem + 0xFF02)
         .equ timr, (mem + 0xFF04)
         .equ intf, (mem + 0xFF0F)
         .equ lcdc, (mem + 0xFF40)
@@ -605,6 +607,10 @@ wopMISC:
         cmp r1, $0x000F0000
         beq wopINTF
 
+        @ Check for SC
+        cmp r1, $0x00020000
+        beq wopSC
+
         @ Fall back to simple write
         b wopMEM
 
@@ -667,6 +673,28 @@ wopINTF:
         ldr r1, =intf
         strb r0, [r1]
         mov pc, lr
+
+        /*!
+         * \brief Special write routine for SC
+         *
+         * When bit 7 rises, a serial transfer is initiated.
+         */
+wopSC:
+        @ Test for bit 7 rising
+        ldr r1, =sc
+        ldrb r1, [r1]
+        mvn r1, r1
+        and r1, r0
+        tst r1, $(1 << 7)
+
+        ldr r1, =sc
+        strb r0, [r1]
+
+        moveq pc, lr
+
+        ldr r1, =sb
+        ldrh r0, [r1]
+        b serial_xfer
 
         /*!
          * \brief Special write routine for INTE

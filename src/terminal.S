@@ -1,8 +1,8 @@
 /******************************************************************************
- * \file dispatch.S
+ * \file terminal.S
  *
  * \copyright
- * Copyright &copy; 2016, Scott K Logan
+ * Copyright &copy; 2019, Scott K Logan
  *
  * \copyright
  * All rights reserved.
@@ -33,81 +33,73 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * \brief Single-call dispatcher for calling into cpu.S, gpu.S and timer.S
+ * \brief Modified Z80 Serial I/O Emulation
  *
  * \author Scott K Logan
  ******************************************************************************/
 
         .include "reg.S"
 
+        .bss
+
+ttyfd:  .space 4
+ttybuff:.space 4
+reg_bu: .space 16
+        .align
+
         .text
 
-ZILINIT:.word 0x00479000
+ttydev: .asciz "/dev/null"
+        .align
 
-        .global dispatch_init
-dispatch_init:
-        mov zil, lr
+        .global serial_init
+serial_init:
+        stmfd sp!, {r2, r7}
 
-        bl cpu_init
-        bl mmu_init
-        bl display_init
-        bl input_init
-        bl timer_init
-        bl serial_init
+        /* Open the device */
+        ldr r0, =ttydev
+        mov r1, $0x02
+        mov r2, $0x800
+        mov r7, $0x05
+        svc $0
 
-        mov lr, zil
+        /* Save the fd */
+        ldr r1, =ttyfd
+        str r0, [r1]
 
-        ldr zil, =ZILINIT
-        ldr zil, [zil]
-
+        ldmfd sp!, {r2, r7}
         mov pc, lr
 
-        .global dispatch_stat
-dispatch_stat:
-        b stat_print
+        .global serial_xfer
+serial_xfer:
+        /* TODO: External clock is not implemented */
+        tst r0, $(1 << 8)
+        moveq pc, lr
 
-        .global dispatch_step
-        .global gpu_ret
-        .global timer_ret
-        .global input_ret
-        .global cpu_ret
-dispatch_step:
-        /* Check GPU */
-        tst zil, $0x1000
-        bne gpu_step
-gpu_ret:
+        ldr r1, =reg_bu
+        stmea r1, {r0, r2, r7, lr}
 
-        /* Check Timer */
-        ands r0, zil, $0x18
-        beq timer_step
-timer_ret:
+        ldr r1, =ttybuff
+        strb r0, [r1]
 
-        /* Check Input */
-        b input_step
-input_ret:
+        /* Write the byte */
+        ldr r0, =ttyfd
+        ldr r0, [r0]
+        mov r2, $0x01
+        mov r7, $0x04
+        svc $0
 
-        /* Check CPU */
-        ands r0, zil, $0x07
-        beq cpu_step
-cpu_ret:
+        /* Transfer complete - clear the bit */
+        ldr r0, =reg_bu
+        ldr r0, [r0]
+        bic r0, $(1 << 15)
 
-        /* Increment! */
-        add zil, $0x17
+        /* TODO: Read data and store it in SC */
+        orr r0, $0xFF
 
-        b dispatch_ret
+        orr r0, $(0xFF00 << 16)
+        orr r0, $(0x0001 << 16)
+        bl mmu_wh
 
-/* SPECIAL ROUTINES */
-
-        .global cpu_exception
-cpu_exception:
-        bl stat_print
-        bl stat_cpu_exception
-
-        mov r0, $0x08
-        b dispatch_exit
-
-        .global cpu_exit
-cpu_exit:
-        b dispatch_exit
-
-        .end
+        ldr r1, =reg_bu
+        ldmfd r1, {r0, r2, r7, pc}
