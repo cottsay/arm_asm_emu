@@ -201,7 +201,7 @@ cpu_step:
 
         /* Load Instruction */
         bl mmu_ri
-        ldrls pc, [zop, r0, lsl $2]
+        ldr pc, [zop, r0, lsl $2]
 
 cpu_inst_r:
         b cpu_ret
@@ -733,7 +733,7 @@ opDAA:   @0x27
 
         tst zrf, $flH           @ if half-carry
         andeq r0, zra, $0xF
-        cmpeq r0, $0x0A         @ or lower nibble of A > 9
+        cmp r0, $0x0A           @ or lower nibble of A > 9
         addge zra, $0x06                @ add 6
 
         tst zrf, $flC           @ if carry
@@ -2848,7 +2848,7 @@ opCBP:   @ 0xCB
 
         /* CB prefix opcode table follows primary */
         add r0, $0x100
-        ldrls pc, [zop, r0, lsl $2]
+        ldr pc, [zop, r0, lsl $2]
 
 opCZnn:  @0xCC
         add zil, $3
