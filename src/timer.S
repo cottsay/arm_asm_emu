@@ -43,6 +43,7 @@
         .bss
 
 tadd:   .space 4
+        .align
 
         .text
 
@@ -54,54 +55,77 @@ timer_init:
 
         mov pc, lr
 
+        .global timer_reset_div
+timer_reset_div:
+        /* Clear bits 4+ if the divider */
+        ldr r1, =tadd
+        ldrh r0, [r1, $2]
+        and r0, $0x000F
+        strh r0, [r1, $2]
+
+        /* Clear bits 2 and 3 (bits 0 and 1 are always clear) */
+        bic zil, $0x18
+
+        /* Anticipate an underflow on the next zil step */
+        add zil, $0x20
+
+        mov pc, lr
+
+        /*
+         * TODO: Handle a possible TIMA increment when timer enable
+         *       goes low.
+         */
         .global timer_step
 timer_step:
+        /* Anticipate an underflow on the next zil step */
+        add zil, $0x20
+
+        /* Increment tadd */
         ldr r0, =tadd
         ldr r1, [r0]
-        add r1, $0x01
+        add r1, $0x00100000
         str r1, [r0]
 
+        /* Get the timer state in r0 */
         bl mmu_rt
 
-        /* Divider */
-        tst r1, $0x0F
-        roreq r0, $0x08
-        addeq r0, $0x01000000
-        roreq r0, $0x18
-        bleq mmu_wt
+        /* Handle DIV */
+        bic r0, $0xFF
+        orr r0, r1, lsr $0x18
 
         /* Timer */
+        ldr lr, =timer_ret
         tst r0, $0x04000000
-        beq timer_step_stopped
+        beq mmu_wt
 
         /* Account for the control speed */
-        lsl r1, $0x1A
+        lsl r1, $0x06
         cmp r0, $0x05000000
         lsrhs r1, $0x1A
         cmp r0, $0x06000000
         rorhs r1, $0x02
         cmp r0, $0x07000000
         rorhs r1, $0x02
-        lsrs r1, $0x1A
 
-        /* Possibly increment the counter */
-        roreq r0, $0x10
-        addeq r0, $0x01000000
-        roreq r0, $0x10
+        lsrs r1, $0x1A
+        bne mmu_wt
+
+        /* Increment the counter */
+        ror r0, $0x10
+        adds r0, $0x01000000
 
         /* If counter overflows, reset it to modulo */
-        tsteq r0, $0xFF00
-        andeq r1, r0, $0xFF0000
-        orreq r0, r1, lsr $0x08
+        orrcs r0, r0, lsl $0x18
+        ror r0, $0x10
 
         bl mmu_wt
 
-        /* Also trigger the timer interrupt */
-        moveq r0, $intT
-        bleq mmu_int
+        /* Return if no interrupt */
+        bcc timer_ret
 
-timer_step_stopped:
-        add zil, $0x20
-        b timer_ret
+        /* Trigger the timer interrupt */
+        ldr lr, =timer_ret
+        mov r0, $intT
+        b mmu_int
 
         .end

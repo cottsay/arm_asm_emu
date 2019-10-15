@@ -48,7 +48,7 @@
         .equ inpt, (mem + 0xFF00)
         .equ sb, (mem + 0xFF01)
         .equ sc, (mem + 0xFF02)
-        .equ timr, (mem + 0xFF04)
+        .equ div, (mem + 0xFF04)
         .equ intf, (mem + 0xFF0F)
         .equ lcdc, (mem + 0xFF40)
         .equ key1, (mem + 0xFF4D)
@@ -259,7 +259,7 @@ mmu_rif:
 
         .global mmu_rt
 mmu_rt:
-        ldr r0, =timr
+        ldr r0, =div
         ldr r0, [r0]
         mov pc, lr
 
@@ -289,7 +289,7 @@ mmu_wh:
 
         .global mmu_wt
 mmu_wt:
-        ldr r1, =timr
+        ldr r1, =div
         str r0, [r1]
         mov pc, lr
 
@@ -607,6 +607,10 @@ wopMISC:
         cmp r1, $0x000F0000
         beq wopINTF
 
+        @ Check for DIV
+        cmp r1, $0x00040000
+        beq wopDIV
+
         @ Check for SC
         cmp r1, $0x00020000
         beq wopSC
@@ -673,6 +677,24 @@ wopINTF:
         ldr r1, =intf
         strb r0, [r1]
         mov pc, lr
+
+        /*!
+         * \brief Special write routine for DIV
+         *
+         * DIV is reset to 0 on write whenever DIV is written
+         * to, regardless of the value being written.
+         *
+         * TODO: Since DIV plays a part in the incrementing of
+         *       TIMA, we may need to reset the timer bits in
+         *       zil and the internal timer routine divider
+         *       to properly mimic that behavior.
+         */
+wopDIV:
+        ldr r1, =div
+        mov r0, $0x00
+        strb r0, [r1]
+
+        b timer_reset_div
 
         /*!
          * \brief Special write routine for SC
