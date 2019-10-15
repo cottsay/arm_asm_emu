@@ -45,14 +45,16 @@
         .equ tset, (mem + 0x8000)
         .equ tmap, (mem + 0x9800)
         .equ oam, (mem + 0xFE00)
-        .equ inpt, (mem + 0xFF00)
-        .equ sb, (mem + 0xFF01)
-        .equ sc, (mem + 0xFF02)
-        .equ div, (mem + 0xFF04)
-        .equ intf, (mem + 0xFF0F)
-        .equ lcdc, (mem + 0xFF40)
-        .equ key1, (mem + 0xFF4D)
-        .equ inte, (mem + 0xFFFF)
+
+        .equ misc, (mem + 0xFF00)
+        .equ inpt, (misc)
+        .equ sb, (misc + 0x01)
+        .equ sc, (misc + 0x02)
+        .equ div, (misc + 0x04)
+        .equ intf, (misc + 0x0F)
+        .equ lcdc, (misc + 0x40)
+        .equ key1, (misc + 0x4D)
+        .equ inte, (misc + 0xFF)
 
         .equ ctyp, (rom + 0x0147)
 
@@ -65,8 +67,8 @@ _mem:   .space 0x8000
 readop: .space 0x10
 writeop:.space 0x10
 
-ram_off:.space 0x01
-rom_off:.space 0x01
+ram_off:.space 0x04
+rom_off:.space 0x04
 input:  .space 0x01
 
         .align
@@ -151,34 +153,31 @@ mmu_init:
         cmp r0, $0x01
         blo mmu_init_ctype_ret
         beq mmu_init_ctype_01
-        cmp r0, $0x03
-        blo mmu_init_ctype_02
 
-        @ Unsupported cartridge type - fall back on type 0x02
-        b mmu_init_ctype_02
+        @ Unsupported cartridge type - fall back on type 0x01
+        b mmu_init_ctype_01
 
 mmu_init_ctype_ret:
         ldmfd sp!, {r2-r4}
         mov pc, lr
 
-mmu_init_ctype_02:
+mmu_init_ctype_01:
         @ Initialize to RAM bank 0
         mov r0, $0x00
         ldr r1, =ram_off
-        strb r0, [r1]
+        str r0, [r1]
 
         @ 0x0000 - 0x1FFF
-        mov r0, $(wopMBC1RAM - wopb)
+        mov r0, $(wopMBC1RAME - wopb)
         orr r0, r0, lsl $0x08
 
         ldr r1, =writeop
         strh r0, [r1]
 
-mmu_init_ctype_01:
         @ Initialize to ROM bank 1
         mov r0, $0x00
         ldr r1, =rom_off
-        strb r0, [r1]
+        str r0, [r1]
 
         @ 0x4000 - 0x7FFF
         mov r0, $(ropROMB - ropb)
@@ -195,6 +194,12 @@ mmu_init_ctype_01:
 
         ldr r1, =writeop
         str r0, [r1, $0x02]
+
+        @ 0x6000 - 0x7FFF
+        mov r0, $(wopMBC1RRM - wopb)
+        orr r0, r0, lsl $0x08
+
+        strh r0, [r1, $0x06]
 
         b mmu_init_ctype_ret
 
@@ -401,8 +406,8 @@ ropBIOS:
         */
 ropROMB:
         ldr r1, =rom_off
-        ldrb r1, [r1]
-        add r0, r1, lsl $0x0E
+        ldr r1, [r1]
+        add r0, r1
 
         /*!
          * \brief Generic ROM read
@@ -427,8 +432,8 @@ ropMEM:
          */
 ropERAMB:
         ldr r1, =ram_off
-        ldrb r1, [r1]
-        add r0, r1, lsl $0x0D
+        ldr r1, [r1]
+        add r0, r1
 
         /*!
          * \brief External RAM read
@@ -449,15 +454,38 @@ mmu_wb:
 wopb:
 
         /*!
-         * \brief Do nothing
+         * \brief ROM/RAM switch mode for MBC1
          */
+wopMBC1RRM:
+        tst r0, $0x01
+
+        @ 0x4000 - 0x5FFF
+        moveq r0, $(wopMBC1ROMu - wopb)
+        movne r0, $(wopMBC1RAM - wopb)
+        orr r0, r0, lsl $0x08
+
+        ldr r1, =writeop
+        strh r0, [r1, $0x04]
+
 wopNOP:
+        mov pc, lr
+
+        /*!
+         * \brief RAM bank switch for MBC1
+         */
+wopMBC1RAM:
+        and r0, $0x03
+        lsl r0, $0x0D
+
+        ldr r1, =ram_off
+        str r0, [r1]
+
         mov pc, lr
 
         /*!
          * \brief RAM enable switch for MBC1
          */
-wopMBC1RAM:
+wopMBC1RAME:
         and r0, $0x0F
         cmp r0, $0x0A
 
@@ -474,8 +502,7 @@ wopMBC1RAM:
 
         ror r0, $0x10
 
-        ldr r1, =writeop
-        strh r0, [r1, $0x0A]
+        strh r0, [r1, $(0x0A + (writeop - readop))]
 
         mov pc, lr
 
@@ -487,13 +514,14 @@ wopMBC1ROM:
         subne r0, $0x01
 
         ldr r1, =rom_off
-        ldrb r1, [r1]
+        ldr r1, [r1]
 
-        bic r1, $0x1F
-        orr r0, r1
+        bic r1, $(0x1F << 0x0E)
+        orr r0, r1, r0, lsl $0x0E
 
+wopMCB1ROMr:
         ldr r1, =rom_off
-        strb r0, [r1]
+        str r0, [r1]
 
         mov pc, lr
 
@@ -504,15 +532,12 @@ wopMBC1ROMu:
         and r0, $0x03
 
         ldr r1, =rom_off
-        ldrb r1, [r1]
+        ldr r1, [r1]
 
-        bic r1, $0xE0
-        orr r0, r1, r0, lsl $0x05
+        bic r1, $(0x03 << 0x13)
+        orr r0, r1, r0, lsl $0x13
 
-        ldr r1, =rom_off
-        strb r0, [r1]
-
-        mov pc, lr
+        b wopMCB1ROMr
 
         /*!
          * \brief Generic memory write
@@ -526,13 +551,12 @@ wopMEM:
          * \brief Banked external RAM read
          */
 wopERAMB:
-        lsr r1, r0, $0x10
+        ldr r1, =ram_off
+        ldr r1, [r1]
+
+        add r1, r0, lsr $0x10
         orr r1, r0, lsl $0x18
         ror r0, r1, $0x18
-
-        ldr r1, =ram_off
-        ldrb r1, [r1]
-        add r0, r1, lsl $0x15
 
         ldr r1, =ram
         strb r0, [r1, r0, lsr $0x08]
@@ -556,6 +580,8 @@ wopERAM:
 wopWRAME:
         ldr r1, =mem
         strb r0, [r1, r0, lsr $0x10]
+
+wopWRAMM:
         eor r0, $0x20000000
         strb r0, [r1, r0, lsr $0x10]
         mov pc, lr
@@ -564,9 +590,7 @@ wopWRAMO:
         ldr r1, =mem
         strb r0, [r1, r0, lsr $0x10]
         cmp r0, $0xDE000000
-        movhs pc, lr
-        orr r0, $0x20000000
-        strb r0, [r1, r0, lsr $0x10]
+        blo wopWRAMM
         mov pc, lr
 
         /*!
@@ -651,11 +675,10 @@ wopINPT:
 wopBSWP:
         lsl r1, r0, $0x10
         cmp r1, $0x00010000
-        movne pc, lr
 
-        mov r0, $(ropROM - ropb)
-        ldr r1, =readop
-        strb r0, [r1]
+        moveq r0, $(ropROM - ropb)
+        ldreq r1, =readop
+        streqb r0, [r1]
 
         mov pc, lr
 
@@ -665,17 +688,17 @@ wopBSWP:
          * The upper 3 bits of this register are always set.
          */
 wopINTF:
-        ldr r1, =inte
-        ldrb r1, [r1]
+        orr r0, $0xE0
+
+        ldr r1, =misc
+        strb r0, [r1, $0x0F] @ intf
+        ldrb r1, [r1, $0xFF] @ inte
 
         and r1, r0
         and r1, $intM
 
         bic zil, $(intM << intO)
         orr zil, r1, lsl $intO
-        orr r0, $0xE0
-        ldr r1, =intf
-        strb r0, [r1]
         mov pc, lr
 
         /*!
@@ -725,16 +748,15 @@ wopSC:
          * access since they are read almost every single cycle.
          */
 wopINTE:
-        ldr r1, =intf
-        ldrb r1, [r1]
+        ldr r1, =misc
+        strb r0, [r1, $0xFF] @ inte
+        ldrb r1, [r1, $0x0F] @ intf
 
         and r1, r0
         and r1, $intM
 
         bic zil, $(intM << intO)
         orr zil, r1, lsl $intO
-        ldr r1, =inte
-        strb r0, [r1]
         mov pc, lr
 
         .end
