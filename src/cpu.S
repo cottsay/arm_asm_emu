@@ -184,6 +184,7 @@ cpu_int:
 
         bl mmu_sint
 
+        add zil, $5
         b cpu_ret
 
         .global cpu_step
