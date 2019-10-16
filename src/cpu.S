@@ -80,6 +80,9 @@
 
         .include "reg.S"
 
+        .bss
+stash:  .space 8
+
         .text
 
 ZOPS:   .word    opNOP,opLDBCnn, opLDBCA,  opIBC,   opIB,   opDB, opLDBn, opRLCA
@@ -189,6 +192,10 @@ cpu_int:
 
         .global cpu_step
 cpu_step:
+        /* Continue if mid-instruction */
+        tst zil, $0x00800000
+        bne cpu_step_cont
+
         /* Process interrupts */
         tst zil, $(intM << intO)
         bicne zil, $0x02000000
@@ -205,6 +212,17 @@ cpu_step:
         ldr pc, [zop, r0, lsl $2]
 
 cpu_inst_r:
+        b cpu_ret
+
+cpu_step_cont:
+        bic zil, $0x00800000
+        ldr r1, =stash
+        ldmfd r1, {r0, pc}
+
+cpu_inst_b:
+        orr zil, $0x00800000
+        ldr r1, =stash
+        stmea r1, {r0, lr}
         b cpu_ret
 
         .ltorg    @ keep literal pool close
@@ -907,12 +925,15 @@ opISP:   @0x33
         b cpu_inst_r
 
 opIHLm:  @0x34
-        bic zrf, $flZNH         @ reset zero, subtract and half-carry
-
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         lsl r0, $0x18
+
+        add zil, $1
+        bl cpu_inst_b
+
+        bic zrf, $flZNH         @ reset zero, subtract and half-carry
 
         adds r0, $0x01000000
         orreq zrf, $flZ                 @ set zero
@@ -922,17 +943,20 @@ opIHLm:  @0x34
         orr r0, zhl, r0, lsr $0x18
         bl mmu_wb
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opDHLm:  @0x35
-        orr zrf, $flZNH         @ set zero, subtract and half-carry
-
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         lsl r0, $0x18
+
+        add zil, $1
+        bl cpu_inst_b
+
+        orr zrf, $flZNH         @ set zero, subtract and half-carry
 
         tst r0, $0x0F000000     @ if lower nibble is not completely zero
         bicne zrf, $flH                 @ reset half-carry
@@ -942,18 +966,21 @@ opDHLm:  @0x35
         orr r0, zhl, r0, lsr $0x18
         bl mmu_wb
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
 opLDHLn: @0x36
+        add zil, $1
+        bl cpu_inst_b
+
         add r0, zpc, $0x00010000
         lsr r0, $0x10
         bl mmu_rb
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00020000
         b cpu_inst_r
 
@@ -3128,12 +3155,15 @@ opR18H:  @0xDF
         b cpu_inst_r
 
 opLDFnA: @0xE0
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_ri1
         orr r0, $0xFF00
         orr r0, zra, r0, lsl $0x10
         bl mmu_wb
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00020000
         b cpu_inst_r
 
@@ -3219,11 +3249,14 @@ opJPHL:  @0xE9
         b cpu_inst_r
 
 opLDnnA: @0xEA
+        add zil, $2
+        bl cpu_inst_b
+
         bl mmu_rih1
         orr r0, zra, r0, lsl $0x10
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00030000
         b cpu_inst_r
 
@@ -3250,13 +3283,16 @@ opR28H:  @0xEF
         b cpu_inst_r
 
 opLDAFn: @0xF0
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_ri1
         orr r0, $0xFF00
         bl mmu_rb
 
         mov zra, r0
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00020000
         b cpu_inst_r
 
@@ -3354,12 +3390,15 @@ opLDSHL: @0xF9
         b cpu_inst_r
 
 opLDAnn: @0xFA
+        add zil, $2
+        bl cpu_inst_b
+
         bl mmu_rih1
         bl mmu_rb
 
         mov zra, r0
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00030000
         b cpu_inst_r
 
@@ -3498,6 +3537,9 @@ cbRLCL:  @0xCB05
         b cpu_inst_r
 
 cbRLCHL: @0xCB06
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
@@ -3511,10 +3553,13 @@ cbRLCHL: @0xCB06
         ands r0, $0xFF          @ clear any carried bit(s)
         orreq zrf, $flZ         @ set zero
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -3621,8 +3666,14 @@ cbRRCL:  @0xCB0D
         b cpu_inst_r
 
 cbRRCHL: @0xCB0E
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
+
+        add zil, $1
+        bl cpu_inst_b
 
         eor zrf, zrf            @ reset all flags
 
@@ -3636,7 +3687,7 @@ cbRRCHL: @0xCB0E
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -3763,8 +3814,14 @@ cbRLL:   @0xCB15
         b cpu_inst_r
 
 cbRLHL:  @0xCB16
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
+
+        add zil, $1
+        bl cpu_inst_b
 
         tst zrf, $flC
 
@@ -3782,7 +3839,7 @@ cbRLHL:  @0xCB16
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -3904,8 +3961,14 @@ cbRRL:   @0xCB1D
         b cpu_inst_r
 
 cbRRHL:  @0xCB1E
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
+
+        add zil, $1
+        bl cpu_inst_b
 
         tst zrf, $flC           @ if carry
         orrne r0, $0x100                @ set bit 8
@@ -3921,7 +3984,7 @@ cbRRHL:  @0xCB1E
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4031,8 +4094,14 @@ cbSLAL:  @0xCB25
         b cpu_inst_r
 
 cbSLAHL: @0xCB26
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
+
+        add zil, $1
+        bl cpu_inst_b
 
         eor zrf, zrf           @ reset all flags
 
@@ -4047,7 +4116,7 @@ cbSLAHL: @0xCB26
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4161,8 +4230,14 @@ cbSRAL:  @0xCB2D
         b cpu_inst_r
 
 cbSRAHL: @0xCB2E
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
+
+        add zil, $1
+        bl cpu_inst_b
 
         eor zrf, zrf            @ reset all flags
 
@@ -4178,7 +4253,7 @@ cbSRAHL: @0xCB2E
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4283,8 +4358,14 @@ cbSWPL:  @0xCB35
         b cpu_inst_r
 
 cbSWPHL: @0xCB36
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
+
+        add zil, $1
+        bl cpu_inst_b
 
         eor zrf, zrf            @ reset all flags
 
@@ -4297,7 +4378,7 @@ cbSWPHL: @0xCB36
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4396,8 +4477,14 @@ cbSRLL:  @0xCB3D
         b cpu_inst_r
 
 cbSRLHL: @0xCB3E
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
+
+        add zil, $1
+        bl cpu_inst_b
 
         eor zrf, zrf            @ reset all flags
 
@@ -4410,7 +4497,7 @@ cbSRLHL: @0xCB3E
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4502,6 +4589,10 @@ cbBT0L:  @0xCB45
 
 cbBT0HL: @0xCB46
         lsr r0, zhl, $0x10
+
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_rb
 
         bic zrf, $flN
@@ -4511,7 +4602,7 @@ cbBT0HL: @0xCB46
         orreq zrf, $flZ
         bicne zrf, $flZ
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4601,6 +4692,10 @@ cbBT1L:  @0xCB4D
 
 cbBT1HL: @0xCB4E
         lsr r0, zhl, $0x10
+
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_rb
 
         bic zrf, $flN
@@ -4610,7 +4705,7 @@ cbBT1HL: @0xCB4E
         orreq zrf, $flZ
         bicne zrf, $flZ
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4700,6 +4795,10 @@ cbBT2L:  @0xCB55
 
 cbBT2HL: @0xCB56
         lsr r0, zhl, $0x10
+
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_rb
 
         bic zrf, $flN
@@ -4709,7 +4808,7 @@ cbBT2HL: @0xCB56
         orreq zrf, $flZ
         bicne zrf, $flZ
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4799,6 +4898,10 @@ cbBT3L:  @0xCB5D
 
 cbBT3HL: @0xCB5E
         lsr r0, zhl, $0x10
+
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_rb
 
         bic zrf, $flN
@@ -4808,7 +4911,7 @@ cbBT3HL: @0xCB5E
         orreq zrf, $flZ
         bicne zrf, $flZ
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4898,6 +5001,10 @@ cbBT4L:  @0xCB65
 
 cbBT4HL: @0xCB66
         lsr r0, zhl, $0x10
+
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_rb
 
         bic zrf, $flN
@@ -4907,7 +5014,7 @@ cbBT4HL: @0xCB66
         orreq zrf, $flZ
         bicne zrf, $flZ
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -4997,6 +5104,10 @@ cbBT5L:  @0xCB6D
 
 cbBT5HL: @0xCB6E
         lsr r0, zhl, $0x10
+
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_rb
 
         bic zrf, $flN
@@ -5006,7 +5117,7 @@ cbBT5HL: @0xCB6E
         orreq zrf, $flZ
         bicne zrf, $flZ
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5096,6 +5207,10 @@ cbBT6L:  @0xCB75
 
 cbBT6HL: @0xCB76
         lsr r0, zhl, $0x10
+
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_rb
 
         bic zrf, $flN
@@ -5105,7 +5220,7 @@ cbBT6HL: @0xCB76
         orreq zrf, $flZ
         bicne zrf, $flZ
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5195,6 +5310,10 @@ cbBT7L:  @0xCB7D
 
 cbBT7HL: @0xCB7E
         lsr r0, zhl, $0x10
+
+        add zil, $1
+        bl cpu_inst_b
+
         bl mmu_rb
 
         bic zrf, $flN
@@ -5204,7 +5323,7 @@ cbBT7HL: @0xCB7E
         orreq zrf, $flZ
         bicne zrf, $flZ
 
-        add zil, $3
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5263,15 +5382,21 @@ cbRS0L:  @0xCB85
         b cpu_inst_r
 
 cbRS0HL: @0xCB86
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x01
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5325,15 +5450,21 @@ cbRS1L:  @0xCB8D
         b cpu_inst_r
 
 cbRS1HL: @0xCB8E
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x02
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5387,15 +5518,21 @@ cbRS2L:  @0xCB95
         b cpu_inst_r
 
 cbRS2HL: @0xCB96
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x04
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5449,15 +5586,21 @@ cbRS3L:  @0xCB9D
         b cpu_inst_r
 
 cbRS3HL: @0xCB9E
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x08
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5511,15 +5654,21 @@ cbRS4L:  @0xCBA5
         b cpu_inst_r
 
 cbRS4HL: @0xCBA6
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x10
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5573,15 +5722,21 @@ cbRS5L:  @0xCBAD
         b cpu_inst_r
 
 cbRS5HL: @0xCBAE
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x20
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5635,15 +5790,21 @@ cbRS6L:  @0xCBB5
         b cpu_inst_r
 
 cbRS6HL: @0xCBB6
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x40
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5697,15 +5858,21 @@ cbRS7L:  @0xCBBD
         b cpu_inst_r
 
 cbRS7HL: @0xCBBE
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         bic r0, $0x80
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5759,15 +5926,21 @@ cbST0L:  @0xCBC5
         b cpu_inst_r
 
 cbST0HL: @0xCBC6
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x01
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5821,15 +5994,21 @@ cbST1L:  @0xCBCD
         b cpu_inst_r
 
 cbST1HL: @0xCBCE
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x02
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5883,15 +6062,21 @@ cbST2L:  @0xCBD5
         b cpu_inst_r
 
 cbST2HL: @0xCBD6
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x04
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -5945,15 +6130,21 @@ cbST3L:  @0xCBDD
         b cpu_inst_r
 
 cbST3HL: @0xCBDE
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x08
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -6007,15 +6198,21 @@ cbST4L:  @0xCBE5
         b cpu_inst_r
 
 cbST4HL: @0xCBE6
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x10
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -6069,15 +6266,21 @@ cbST5L:  @0xCBED
         b cpu_inst_r
 
 cbST5HL: @0xCBEE
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x20
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -6131,15 +6334,21 @@ cbST6L:  @0xCBF5
         b cpu_inst_r
 
 cbST6HL: @0xCBF6
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x40
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
@@ -6193,15 +6402,21 @@ cbST7L:  @0xCBFD
         b cpu_inst_r
 
 cbST7HL: @0xCBFE
+        add zil, $1
+        bl cpu_inst_b
+
         lsr r0, zhl, $0x10
         bl mmu_rb
 
         orr r0, $0x80
 
+        add zil, $1
+        bl cpu_inst_b
+
         orr r0, zhl
         bl mmu_wb
 
-        add zil, $4
+        add zil, $2
         add zpc, $0x00010000
         b cpu_inst_r
 
