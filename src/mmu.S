@@ -92,24 +92,23 @@ mmu_init:
 
         /* Set up the MMU read operation map */
         @ 0x0000 - 0x3FFF
-        mov r0, $(ropBIOS - ropb)
-        orr r0, $((ropROM - ropb) << 8)
-        orr r0, $((ropROM - ropb) << 16)
-        orr r0, $((ropROM - ropb) << 24)
+        mov r0, $((ropBIOS - ropb) >> 2)
+        orr r0, $((ropROM - ropb) << 6)
+        orr r0, $((ropROM - ropb) << 14)
+        orr r0, $((ropROM - ropb) << 22)
 
         @ 0x4000 - 0x7FFF
-        mov r1, $(ropROM - ropb)
+        mov r1, $((ropROM - ropb) >> 2)
         orr r1, r1, lsl $0x08
         orr r1, r1, lsl $0x10
 
         @ 0x8000 - 0xBFFF
-        mov r2, $(ropMEM - ropb)
-        orr r2, $((ropMEM - ropb) << 8)
-        orr r2, $((ropNOP - ropb) << 16)
-        orr r2, $((ropNOP - ropb) << 24)
+        mov r2, $((ropMEM - ropb) >> 2)
+        orr r2, $((ropNOP - ropb) << 14)
+        orr r2, r2, lsl $0x08
 
         @ 0xC000 - 0xFFFF
-        mov r3, $(ropMEM - ropb)
+        mov r3, $((ropMEM - ropb) >> 2)
         orr r3, r3, lsl $0x08
         orr r3, r3, lsl $0x10
 
@@ -118,7 +117,7 @@ mmu_init:
 
         /* Set up the MMU write operation map */
         @ 0x0000 - 0x3FFF
-        mov r0, $(wopNOP - wopb)
+        mov r0, $((wopNOP - wopb) >> 2)
         orr r0, r0, lsl $0x08
         orr r0, r0, lsl $0x10
 
@@ -126,16 +125,15 @@ mmu_init:
         mov r1, r0
 
         @ 0x8000 - 0xBFFF
-        mov r2, $(wopMEM - wopb)
-        orr r2, $((wopMEM - wopb) << 8)
-        orr r2, $((wopNOP - wopb) << 16)
-        orr r2, $((wopNOP - wopb) << 24)
+        mov r2, $((wopMEM - wopb) >> 2)
+        orr r2, $((wopNOP - wopb) << 14)
+        orr r2, r2, lsl $0x08
 
         @ 0xC000 - 0xFFFF
-        mov r3, $(wopWRAME - wopb)
-        orr r3, $((wopWRAMO - wopb) << 8)
-        orr r3, $((wopWRAME - wopb) << 16)
-        orr r3, $((wopMISC - wopb) << 24)
+        mov r3, $((wopWRAME - wopb) >> 2)
+        orr r3, $((wopWRAMO - wopb) << 6)
+        orr r3, $((wopWRAME - wopb) << 14)
+        orr r3, $((wopMISC - wopb) << 22)
 
         ldr r4, =writeop
         stmea r4, {r0-r3}
@@ -168,7 +166,7 @@ mmu_init_ctype_01:
         str r0, [r1]
 
         @ 0x0000 - 0x1FFF
-        mov r0, $(wopMBC1RAME - wopb)
+        mov r0, $((wopMBC1RAME - wopb) >> 2)
         orr r0, r0, lsl $0x08
 
         ldr r1, =writeop
@@ -180,7 +178,7 @@ mmu_init_ctype_01:
         str r0, [r1]
 
         @ 0x4000 - 0x7FFF
-        mov r0, $(ropROMB - ropb)
+        mov r0, $((ropROMB - ropb) >> 2)
         orr r0, r0, lsl $0x08
         orr r0, r0, lsl $0x10
 
@@ -188,15 +186,15 @@ mmu_init_ctype_01:
         str r0, [r1, $0x04]
 
         @ 0x2000 - 0x5FFF
-        mov r0, $(wopMBC1ROM - wopb)
-        orr r0, $((wopMBC1ROMu - wopb) << 16)
+        mov r0, $((wopMBC1ROM - wopb) >> 2)
+        orr r0, $((wopMBC1ROMu - wopb) << 14)
         orr r0, r0, lsl $0x08
 
         ldr r1, =writeop
         str r0, [r1, $0x02]
 
         @ 0x6000 - 0x7FFF
-        mov r0, $(wopMBC1RRM - wopb)
+        mov r0, $((wopMBC1RRM - wopb) >> 2)
         orr r0, r0, lsl $0x08
 
         strh r0, [r1, $0x06]
@@ -376,7 +374,7 @@ mmu_rgs:
 mmu_rb:
         ldr r1, =readop
         ldrb r1, [r1, r0, lsr $0x0C]
-        add pc, r1
+        add pc, r1, lsl $0x02
         nop
 ropb:
 
@@ -449,7 +447,7 @@ ropERAM:
 mmu_wb:
         ldr r1, =writeop
         ldrb r1, [r1, r0, lsr $0x1C]
-        add pc, r1
+        add pc, r1, lsl $0x02
         nop
 wopb:
 
@@ -460,8 +458,8 @@ wopMBC1RRM:
         tst r0, $0x01
 
         @ 0x4000 - 0x5FFF
-        moveq r0, $(wopMBC1ROMu - wopb)
-        movne r0, $(wopMBC1RAM - wopb)
+        moveq r0, $((wopMBC1ROMu - wopb) >> 2)
+        movne r0, $((wopMBC1RAM - wopb) >> 2)
         orr r0, r0, lsl $0x08
 
         ldr r1, =writeop
@@ -490,10 +488,10 @@ wopMBC1RAME:
         cmp r0, $0x0A
 
         @ 0xA000 - 0xBFFF
-        moveq r0, $(ropERAMB - ropb)
-        orreq r0, $((wopERAMB - wopb) << 16)
-        movne r0, $(ropNOP - ropb)
-        orrne r0, $((wopNOP - wopb) << 16)
+        moveq r0, $((ropERAMB - ropb) >> 2)
+        orreq r0, $((wopERAMB - wopb) << 14)
+        movne r0, $((ropNOP - ropb) >> 2)
+        orrne r0, $((wopNOP - wopb) << 14)
 
         orr r0, r0, lsl $0x08
 
@@ -676,7 +674,7 @@ wopBSWP:
         lsl r1, r0, $0x10
         cmp r1, $0x00010000
 
-        moveq r0, $(ropROM - ropb)
+        moveq r0, $((ropROM - ropb) >> 2)
         ldreq r1, =readop
         streqb r0, [r1]
 
