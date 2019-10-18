@@ -150,16 +150,16 @@ mmu_init:
         ldrb r0, [r0]
         cmp r0, $0x01
         blo mmu_init_ctype_ret
-        beq mmu_init_ctype_01
+        beq mmu_init_mbc1
 
         @ Unsupported cartridge type - fall back on type 0x01
-        b mmu_init_ctype_01
+        b mmu_init_mbc1
 
 mmu_init_ctype_ret:
         ldmfd sp!, {r2-r4}
         mov pc, lr
 
-mmu_init_ctype_01:
+mmu_init_mbc1:
         @ Initialize to RAM bank 0
         mov r0, $0x00
         ldr r1, =ram_off
@@ -441,6 +441,36 @@ ropERAM:
         ldrb r0, [r1, r0]
         mov pc, lr
 
+        /*!
+         * \brief Register read for clock seconds
+         */
+ropCLOCKs:
+        mov pc, lr
+
+        /*!
+         * \brief Register read for clock minutes
+         */
+ropCLOCKm:
+        mov pc, lr
+
+        /*!
+         * \brief Register read for clock hours
+         */
+ropCLOCKh:
+        mov pc, lr
+
+        /*!
+         * \brief Register read for clock days
+         */
+ropCLOCKd:
+        mov pc, lr
+
+        /*!
+         * \brief Register read for other misc. clock state
+         */
+ropCLOCKo:
+        mov pc, lr
+
         /* MMU WRITE OPERATIONS */
 
         .global mmu_wb
@@ -538,6 +568,47 @@ wopMBC1ROMu:
         b wopMCB1ROMr
 
         /*!
+         * \brief RAM bank and RTC register switch for MBC3
+         */
+wopMBC3RAM:
+        and r1, r0, $0xFF
+        cmp r1, $0x04
+        blo wopMBC1RAM
+
+        mov r0, $0x00
+
+        cmp r1, $0x08
+        moveq r0, $((ropCLOCKs - ropb) >> 2)
+        orreq r0, $((wopNOP - wopb) << 14)
+
+        cmp r1, $0x09
+        moveq r0, $((ropCLOCKm - ropb) >> 2)
+        orreq r0, $((wopNOP - wopb) << 14)
+
+        cmp r1, $0x0A
+        moveq r0, $((ropCLOCKh - ropb) >> 2)
+        orreq r0, $((wopNOP - wopb) << 14)
+
+        cmp r1, $0x0B
+        moveq r0, $((ropCLOCKd - ropb) >> 2)
+        orreq r0, $((wopNOP - wopb) << 14)
+
+        cmp r1, $0x0C
+        moveq r0, $((ropCLOCKo - ropb) >> 2)
+        orreq r0, $((wopNOP - wopb) << 14)
+
+        orr r0, r0, lsl $0x08
+
+        ldr r1, =readop
+        strh r0, [r1, $0x0A]
+
+        ror r0, $0x10
+
+        strh r0, [r1, $(0x0A + (writeop - readop))]
+
+        mov pc, lr
+
+        /*!
          * \brief Generic memory write
          */
 wopMEM:
@@ -589,6 +660,12 @@ wopWRAMO:
         strb r0, [r1, r0, lsr $0x10]
         cmp r0, $0xDE000000
         blo wopWRAMM
+        mov pc, lr
+
+        /*!
+         * \brief Special write routine to latch the clock
+         */
+wopCLOCKl:
         mov pc, lr
 
         /*!

@@ -1,5 +1,5 @@
 /******************************************************************************
- * \file dispatch.S
+ * \file time.S
  *
  * \copyright
  * Copyright &copy; 2016, Scott K Logan
@@ -33,82 +33,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * \brief Single-call dispatcher for calling into cpu.S, gpu.S and timer.S
+ * \brief MBC3 RTC Emulation via 'time' syscall
  *
  * \author Scott K Logan
  ******************************************************************************/
 
-        .include "reg.S"
+        .bss
+
+offset: .space 8
+halted: .space 1
+
+        .align
 
         .text
 
-ZILINIT:.word 0x00479000
-
-        .global dispatch_init
-dispatch_init:
-        mov zil, lr
-
-        bl cpu_init
-        bl mmu_init
-        bl display_init
-        bl input_init
-        bl timer_init
-        bl serial_init
-        bl rtc_init
-
-        mov lr, zil
-
-        ldr zil, =ZILINIT
-        ldr zil, [zil]
-
+        .global rtc_init
+rtc_init:
         mov pc, lr
 
-        .global dispatch_stat
-dispatch_stat:
-        b stat_print
+        .global rtc_halt
+rtc_halt:
+        mov pc, lr
 
-        .global dispatch_step
-        .global gpu_ret
-        .global timer_ret
-        .global input_ret
-        .global cpu_ret
-dispatch_step:
-        /* Check GPU */
-        tst zil, $0x1000
-        bne gpu_step
-gpu_ret:
+        .global rtc_read
+rtc_read:
+        mov pc, lr
 
-        /* Check Timer */
-        ands r0, zil, $0x18
-        beq timer_step
-timer_ret:
-
-        /* Check Input */
-        b input_step
-input_ret:
-
-        /* Check CPU */
-        ands r0, zil, $0x07
-        beq cpu_step
-cpu_ret:
-
-        /* Increment! */
-        add zil, $0x17
-
-        b dispatch_ret
-
-/* SPECIAL ROUTINES */
-
-        .global cpu_exception
-cpu_exception:
-        bl stat_print
-        bl stat_cpu_exception
-
-        mov r0, $0x08
-        b dispatch_exit
-
-        .global cpu_exit
-cpu_exit:
-        b dispatch_exit
+        .global rtc_resume
+rtc_resume:
+        mov pc, lr
 
         .end
