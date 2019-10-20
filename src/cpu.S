@@ -56,11 +56,11 @@
  * | rd         | r6         |
  * | re         | r7         |
  * | rf         | r8         |
- * | rh         | r9         |
- * | rl         | r10        |
+ * | rhl        | r9         |
+ * | sp         | r10        |
  * | pc         | r11        |
  * | il         | r12        |
- * | sp         | r13 (sp)   |
+ * |            | r13 (sp)   |
  * |            | r14 (lr)   |
  *
  * Since the individual opcode implementations use an absolute branch to return
