@@ -702,6 +702,9 @@ wopMISC:
         cmp r1, $0x00500000
         beq wopBSWP
 
+        cmp r1, $0x00460000
+        beq wopOAMDMA
+
         @ Check for INTF
         cmp r1, $0x000F0000
         beq wopINTF
@@ -756,6 +759,23 @@ wopBSWP:
         streqb r0, [r1]
 
         mov pc, lr
+
+wopOAMDMA:
+        stmfd sp!, {r2-r4, lr}
+        and r0, $0xFF
+        lsl r2, r0, $0x08
+        mov r3, $0x9F
+        ldr r4, =oam
+
+wopOAMDMAb:
+        add r0, r2, r3
+        bl mmu_rb
+        strb r0, [r4, r3]
+
+        subs r3, $0x01
+        bpl wopOAMDMAb
+
+        ldmfd sp!, {r2-r4, pc}
 
         /*!
          * \brief Special write routine for INTF
