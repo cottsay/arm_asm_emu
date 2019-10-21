@@ -140,7 +140,7 @@ display_init_morton:
 
         .global display_rendersprites
 display_rendersprites:
-        stmfd sp!, {r1-r12, lr}
+        stmfd sp!, {r1-r10, lr}
 
         /*
          * r0: Line
@@ -150,6 +150,10 @@ display_rendersprites:
          * r4: Palettes
          */
         bl mmu_rg
+
+        /* Check if sprites are enabled */
+        tst r3, $0x02
+        ldmeqfd sp!, {r1-r10, pc}
 
         /* Offset line by 16 */
         add r2, r0, $0x10
@@ -182,28 +186,36 @@ display_render_sprite:
         and r6, r0, $0x00FF
         rsbs r6, r2
         bmi display_render_sprite
-        cmp r6, $0x08
+        tst r3, $0x04
+        moveq r1, $0x08
+        movne r1, $0x10
+        cmp r6, r1
         bhs display_render_sprite
 
         /* Put X in r7 */
-        ands r7, r0, $0xFF00
-        cmpne r7, $0xA8
-        bge display_render_sprite
+        and r7, r0, $0xFF00
+        lsr r7, $0x08
+        subs r7, $0x08
+        bmi display_render_sprite
+        cmp r7, $0xA8
+        bhs display_render_sprite
 
         /* Flip Y (if necessary) */
         tst r0, $0x40000000
         rsbne r6, $0x08
 
-        /* Load the appropriate line addr in r8 */
+        /* Load the appropriate line addr in r10 */
         tst r0, $0x80000000
-        ldreq r8, =linesp0
-        ldrne r8, =linesp1
+        ldreq r10, =linesp0
+        ldrne r10, =linesp1
 
-        @ TODO: X FLIP
+        /* Flip X (if necessary) */
+        tst r0, $0x20000000
 
         /* Load the tile */
         lsr r0, $0x10
         and r0, $0xFF
+        lsl r0, $0x04
         add r0, r6, lsl $0x01
         bl mmu_rgt
 
@@ -216,31 +228,65 @@ display_render_sprite:
         ldrh r1, [r8, r1]
         orr r0, r1, r0, lsl $0x01
 
-        /* Put the 8-pixel-block offset in r1 */
+        beq no_flip_x
+
+        mov r1, r0, lsr $0x0E
+        lsl r0, $0x12
+        ror r1, $0x02
+        orr r1, r0, lsr $0x1E
+        lsl r0, $0x02
+        ror r1, $0x02
+        orr r1, r0, lsr $0x1E
+        lsl r0, $0x02
+        ror r1, $0x02
+        orr r1, r0, lsr $0x1E
+        lsl r0, $0x02
+        ror r1, $0x02
+        orr r1, r0, lsr $0x1E
+        lsl r0, $0x02
+        ror r1, $0x02
+        orr r1, r0, lsr $0x1E
+        lsl r0, $0x02
+        ror r1, $0x02
+        orr r1, r0, lsr $0x1E
+        lsl r0, $0x02
+        orr r1, r0, lsr $0x1E
+        ror r0, r1, $0x14
+
+no_flip_x:
+        /* Put the 8-pixel-block (2 bytes) offset in r1 */
         lsr r1, r7, $0x03
+
+        /* r7 becomes the pixel offset after the 8-pixel-block */
         and r7, $0x07
+        lsl r7, $0x01
 
         /* Load the current sprite data into lr */
-        ldr lr, [r8, r1, lsl $0x01]
-
-        /* Mask out the old data */
-        mov r9, $0xFF
-        orr r9, r9, lsl $0x08
-        bic lr, r9, lsl r7
+        ldr lr, [r10, r1, lsl $0x01]
 
         @ TODO: Resolve the palette
 
+        /* Mask out the old data */
+        ldr r9, =$0x5555
+        and r9, r0
+        orr r9, r9, lsl $0x01
+        bic lr, r9, lsl r7
+
+        ldr r9, =$0xAAAA
+        and r9, r0
+        orr r9, r9, lsr $0x01
+        bic lr, r9, lsl r7
+
         /* OR-in the new tile */
-        @orr lr, r0, lsl r7
-        orr lr, r9, lsl r7
+        orr lr, r0, lsl r7
 
         /* Store the modified data back to the line */
-        str lr, [r8, r1, lsl $0x01]
+        str lr, [r10, r1, lsl $0x01]
 
         b display_render_sprite
 display_render_sprite_done:
 
-        ldmfd sp!, {r1-r12, pc}
+        ldmfd sp!, {r1-r10, pc}
 
         .global display_renderbg
 display_renderbg:
@@ -254,6 +300,10 @@ display_renderbg:
          * r4: Palettes
          */
         bl mmu_rg
+
+        /* Check if BG is enabled */
+        tst r3, $0x01
+        ldmeqfd sp!, {r1-r10, pc}
 
         /* Fix SCY based on current line */
         add r1, r0
@@ -385,7 +435,6 @@ display_putline:
         ldr r1, [r1]
         ldr r4, =llen
         ldr r4, [r4]
-        //lsr r4, $0x02
 
         mul r0, r4
         add r0, r1
@@ -408,9 +457,7 @@ display_put_sixteen:
         ldr r7, [r4], $0x04
         ldr r8, [r5], $0x04
         ldr r9, [r6], $0x04
-        ror r7, $0x1F
         ror r8, $0x1F
-        ror r9, $0x1F
 
         /*
          * r7: Sprite 0 value
