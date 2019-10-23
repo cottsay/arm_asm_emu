@@ -68,6 +68,12 @@ gpu_step:
         cmp lr, $0x03
         bleq display_renderbg
 
+        /* Render window line if ending VRAM */
+        lsl lr, zil, $0x11
+        lsr lr, $0x1E
+        cmp lr, $0x03
+        bleq display_renderwin
+
         /* Get the GPU mode alone */
         lsl lr, zil, $0x11
         lsrs lr, $0x1E

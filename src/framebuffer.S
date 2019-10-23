@@ -422,6 +422,138 @@ display_renderbg_tile:
 
         ldmfd sp!, {r1-r10, pc}
 
+        .global display_renderwin
+display_renderwin:
+        stmfd sp!, {r1-r10, lr}
+
+        /*
+         * r0: Line
+         * r1: WY
+         * r2: WX
+         * r3: LCDC
+         */
+        bl mmu_rw
+
+        /* Check if window is enabled */
+        tst r3, $0x20
+        ldmeqfd sp!, {r1-r10, pc}
+
+        /* Fix WY based on current line */
+        rsbs r1, r0
+        ldmmifd sp!, {r1-r10, pc}
+
+        /* Fix the WX offset */
+        subs r2, $0x07
+        movmi r2, $0x00
+
+        /* Put map base in r5 */
+        tst r3, $0x40
+        movne r5, $0x0400
+        moveq r5, $0x0000
+
+        /* Put tile base in r6 */
+        tst r3, $0x10
+        movne r6, $0x0000
+        moveq r6, $0x0800
+
+        /* Correct map and tile base from WY */
+        lsr r0, r1, $0x03
+        add r5, r0, lsl $0x05
+        and r1, $0x07
+        add r6, r1, lsl $0x01
+
+        /* Put map column in r7 */
+        lsr r7, r2, $0x03
+
+        /* Put tile column in r2 */
+        and r2, $0x07
+        lsl r2, $0x01
+
+        /* Load morton table in r8 */
+        ldr r8, =morton
+
+        /* Load line address in r9 */
+        ldr r9, =linebg
+
+        /* Not including initial tile, repeat 20 times */
+        mov r10, $0x14
+
+        /* Window Line Render Loop
+         * r2: Tile column offset
+         * r3: LCDC
+         * r4: Running tile
+         * r5: Map base
+         * r6: Tile base
+         * r7: Map column
+         * r8: Morton table
+         * r9: Destination line address
+         * r10: Loop counter
+         */
+
+        /* Load the first map cell */
+        add r0, r5, r7
+        bl mmu_rgm
+
+        /* Load the corresponding tile */
+        tst r3, $0x10
+        eoreq r0, $0x80
+        lsl r0, $0x04
+        add r0, r6
+        bl mmu_rgt
+
+        /* Interleave the bits */
+        and r1, r0, $0xFF
+        lsl r1, $0x01
+        lsr r0, $0x08
+        lsl r0, $0x01
+        ldrh r0, [r8, r0]
+        ldrh r1, [r8, r1]
+        orr r0, r1, r0, lsl $0x01
+
+        /* Discard unneeded bits of this cell */
+        lsr r4, r0, r2
+
+        /* From now on, we will shift in the other direction */
+        rsb r2, $0x10
+
+display_renderwin_tile:
+        /* Move to next tile (and wrap) */
+        add r7, $0x01
+        and r7, $0x1F
+
+        /* Load the next map cell */
+        add r0, r5, r7
+        bl mmu_rgm
+
+        /* Load the corresponding tile */
+        tst r3, $0x10
+        eoreq r0, $0x80
+        lsl r0, $0x04
+        add r0, r6
+        bl mmu_rgt
+
+        /* Interleave the bits */
+        and r1, r0, $0xFF
+        lsl r1, $0x01
+        lsr r0, $0x08
+        lsl r0, $0x01
+        ldrh r0, [r8, r0]
+        ldrh r1, [r8, r1]
+        orr r0, r1, r0, lsl $0x01
+
+        /* OR this tile after the previous tile's last bit */
+        orr r4, r0, lsl r2
+
+        /* Store the newly rendered tile */
+        strh r4, [r9], $0x02
+        lsr r4, $0x10
+
+        /* Repeat */
+        subs r10, $0x01
+        bne display_renderwin_tile
+
+        ldmfd sp!, {r1-r10, pc}
+
         .global display_putline
 display_putline:
         stmfd sp!, {r1-r12, lr}

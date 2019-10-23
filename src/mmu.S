@@ -350,6 +350,24 @@ mmu_rg:
 
         mov pc, lr
 
+        .global mmu_rw
+mmu_rw:
+        ldr r0, =lcdc
+
+        /* LCDC to r3 */
+        ldrb r3, [r0]
+
+        /* WX to r2 */
+        ldrb r2, [r0, $0x0B]
+
+        /* WY to r1 */
+        ldrb r1, [r0, $0x0A]
+
+        /* LY to r0 */
+        ldrb r0, [r0, $0x04]
+
+        mov pc, lr
+
         .global mmu_rgt
 mmu_rgt:
         ldr r1, =tset
