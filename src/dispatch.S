@@ -53,6 +53,7 @@ dispatch_init:
         bl display_init
         bl input_init
         bl timer_init
+        bl screen_init
         bl serial_init
         bl rtc_init
 

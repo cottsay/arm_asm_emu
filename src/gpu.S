@@ -2,7 +2,7 @@
  * \file gpu.S
  *
  * \copyright
- * Copyright &copy; 2016, Scott K Logan
+ * Copyright &copy; 2019, Scott K Logan
  *
  * \copyright
  * All rights reserved.
@@ -33,7 +33,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * \brief Graphics processing routines
+ * \brief Graphics processing dispatch
  *
  * \author Scott K Logan
  ******************************************************************************/
@@ -53,66 +53,51 @@ ziltbl:                  /*    -- Normal Transitions --    */
 
         .global gpu_step
 gpu_step:
-        /* Get the GPU mode alone */
-        lsl lr, zil, $0x11
-        lsrs lr, $0x1E
+        /* Get the GPU mode alone (shifted left by 13) */
+        ands r0, zil, $0x6000
 
         /* Display rendered line if ending HBlank */
-        bleq display_putline
+        beq display_putline
 
-        /* Render sprite lines if ending OAM */
-        cmp lr, $0x02
-        bleq display_rendersprites
+        /* Look for sprites if ending OAM */
+        cmp r0, $(0x02 << 0x0D)
+        beq display_scan
 
         /* Render background line if ending VRAM */
-        cmp lr, $0x03
-        bleq display_renderbg
+        cmp r0, $(0x03 << 0x0D)
+        beq display_render
 
-        /* Render window line if ending VRAM */
-        lsl lr, zil, $0x11
-        lsr lr, $0x1E
-        cmp lr, $0x03
-        bleq display_renderwin
-
-        /* Get the GPU mode alone */
-        lsl lr, zil, $0x11
-        lsrs lr, $0x1E
+        .global gpu_mode_ret
+gpu_mode_ret:
+        /* Get the GPU mode alone (shifted left by 13) */
+        and r0, zil, $0x6000
 
         /* Add the corresponding transition value from ziltbl */
-        ldr r0, =ziltbl
-        ldr lr, [r0, lr, lsl $0x02]
-        add zil, lr
+        ldr r1, =ziltbl
+        ldr r0, [r1, r0, lsr $0x0B]
+        add zil, r0
 
-        /* Get the line number alone */
-        lsl lr, zil, $0x09
-        lsr lr, $0x18
+        /* Get the line number alone (shifted left by 8) */
+        lsr lr, zil, $0x07
+        and lr, $(0xFF << 0x08)
 
         /* On line 144, special transition to VBlank */
-        cmp lr, $0x90
-        ldreq r0, [r0, $0x10]
+        cmp lr, $(0x90 << 0x08)
+        ldreq r0, [r1, $0x10]
         addeq zil, r0
 
         /* On line 154, special transition from VBlank */
-        cmp lr, $0x9A
-        ldreq r0, [r0, $0x14]
+        cmp lr, $(0x9A << 0x08)
+        ldreq r0, [r1, $0x14]
         addeq zil, r0
 
-        /* Write line number to register */
-        orr r0, lr, $0xFF000000
-        orr r0, $0x00440000
-        bl mmu_wb
-
-        /* Write GPU mode to register */
-        lsl r0, zil, $0x11
-        lsr r0, $0x1E
-        orr r0, $0xFF000000
-        orr r0, $0x00410000
-        bl mmu_wb
+        /* Update STAT and LY with zil */
+        and r1, zil, $0x6000
+        orr r0, lr, r1, lsr $0x0D
+        bl mmu_wg
 
         /* Trigger interrupt on VBlank */
-        lsl lr, zil, $0x09
-        lsr lr, $0x18
-        cmp lr, $0x90
+        cmp r0, $0x90
         moveq r0, $intV
         bleq mmu_int
 

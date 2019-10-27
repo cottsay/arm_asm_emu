@@ -328,58 +328,82 @@ mmu_sint:
         bic r0, r1, r0
         b wopINTF
 
+        /*!
+         * \brief Read LCDC for the GPU
+         */
         .global mmu_rg
 mmu_rg:
         ldr r0, =lcdc
-
-        /* Palettes to r4 */
-        ldr r4, [r0, $0x07]
-        bic r4, $0xFF000000
-
-        /* LCDC to r3 */
-        ldrb r3, [r0]
-
-        /* SCX to r2 */
-        ldrb r2, [r0, $0x03]
-
-        /* SCY to r1 */
-        ldrb r1, [r0, $0x02]
-
-        /* LY to r0 */
-        ldrb r0, [r0, $0x04]
-
+        ldrb r0, [r0]
         mov pc, lr
 
-        .global mmu_rw
-mmu_rw:
-        ldr r0, =lcdc
-
-        /* LCDC to r3 */
-        ldrb r3, [r0]
-
-        /* WX to r2 */
-        ldrb r2, [r0, $0x0B]
-
-        /* WY to r1 */
-        ldrb r1, [r0, $0x0A]
-
-        /* LY to r0 */
-        ldrb r0, [r0, $0x04]
-
+        /*!
+         * \brief Write STAT and LY for the GPU
+         *
+         * Leave LY in r0 for the GPU to use
+         */
+        .global mmu_wg
+mmu_wg:
+        ldr r1, =lcdc
+        strb r0, [r1, $0x01]
+        lsr r0, $0x08
+        strb r0, [r1, $0x04]
         mov pc, lr
 
+        /*!
+         * \brief Read LCDC and palettes for GPU
+         */
+        .global mmu_rgr
+mmu_rgr:
+        ldr r2, =lcdc
+        ldr r4, [r2, $0x07]
+        bic r4, $(0xFF << 0x18)
+        ldrb r2, [r2]
+        mov pc, lr
+
+        /*!
+         * \brief Read SCY and SCX for GPU
+         */
+        .global mmu_rgb
+mmu_rgb:
+        ldr r10, =lcdc
+        ldrb r9, [r10, $0x02]
+        ldrb r10, [r10, $0x03]
+        mov pc, lr
+
+        /*!
+         * \brief Read WY and WX for GPU
+         */
+        .global mmu_rgw
+mmu_rgw:
+        ldr r10, =lcdc
+        ldrb r9, [r10, $0x0A]
+        ldrb r10, [r10, $0x0B]
+        mov pc, lr
+
+        /*!
+         * \brief Read GPU tile data from VRAM
+         */
         .global mmu_rgt
 mmu_rgt:
         ldr r1, =tset
         ldrh r0, [r1, r0]
         mov pc, lr
 
+        /*!
+         * \brief Read GPU tile maps from VRAM
+         */
         .global mmu_rgm
 mmu_rgm:
         ldr r1, =tmap
         ldrb r0, [r1, r0]
         mov pc, lr
 
+        /*!
+         * \brief Read GPU sprite objects from OAM
+         *
+         * Takes a sprite index (0-39) in r0.
+         */
         .global mmu_rgs
 mmu_rgs:
         ldr r1, =oam
