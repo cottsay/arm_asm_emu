@@ -203,7 +203,7 @@ mmu_init_mbc1:
 
         .global mmu_load
 mmu_load:
-        stmfd sp!, {r2, r7}
+        stmfd sp!, {r2, r7-r8}
 
         /* Open the file */
         mov r1, $0
@@ -213,6 +213,8 @@ mmu_load:
         cmp r0, $0
         blt mmu_load_end
 
+        mov r8, r0
+
         /* Read the program */
         ldr r1, =rom
         mov r2, $0x200000
@@ -220,14 +222,15 @@ mmu_load:
         svc $0
 
         cmp r0, $0
-        movhi r0, $0
+        ble mmu_load_end
 
         /* Close the file */
+        mov r0, r8
         mov r7, $6
         svc $0
 
 mmu_load_end:
-        ldmfd sp!, {r2, r7}
+        ldmfd sp!, {r2, r7-r8}
         mov pc, lr
 
         .global mmu_ri
