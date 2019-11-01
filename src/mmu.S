@@ -88,7 +88,7 @@ bios:   .ifdef EMBED_BIOS
 
         .global mmu_init
 mmu_init:
-        stmfd sp!, {r2-r4}
+        stmfd sp!, {r2-r4, lr}
 
         /* Set up the MMU read operation map */
         @ 0x0000 - 0x3FFF
@@ -150,14 +150,22 @@ mmu_init:
         ldrb r0, [r0]
         cmp r0, $0x01
         blo mmu_init_ctype_ret
-        beq mmu_init_mbc1
+        ldr lr, =mmu_init_ctype_ret
+
+        @ CType 1: 0x01 - 0x03
+        cmp r0, $0x03
+        ble mmu_init_mbc1
+
+        @ CType 3: 0x11 - 0x13
+        cmp r0, $0x11
+        rsbgts r1, r0, $0x13
+        bge mmu_init_mbc3
 
         @ Unsupported cartridge type - fall back on type 0x01
-        b mmu_init_mbc1
+        bl mmu_init_mbc1
 
 mmu_init_ctype_ret:
-        ldmfd sp!, {r2-r4}
-        mov pc, lr
+        ldmfd sp!, {r2-r4, pc}
 
 mmu_init_mbc1:
         @ Initialize to RAM bank 0
@@ -199,7 +207,29 @@ mmu_init_mbc1:
 
         strh r0, [r1, $0x06]
 
-        b mmu_init_ctype_ret
+        mov pc, lr
+
+mmu_init_mbc3:
+        stmfd sp!, {lr}
+
+        @ Start with MBC1
+        bl mmu_init_mbc1
+
+        @ 0x2000 - 0x5FFF
+        mov r0, $((wopMBC3ROM - wopb) >> 2)
+        orr r0, $((wopMBC1RAM - wopb) << 14)
+        orr r0, r0, lsl $0x08
+
+        ldr r1, =writeop
+        str r0, [r1, $0x02]
+
+        @ 0x6000 - 0x7FFF
+        mov r0, $((wopNOP - wopb) >> 2)
+        orr r0, r0, lsl $0x08
+
+        strh r0, [r1, $0x06]
+
+        ldmfd sp!, {pc}
 
         .global mmu_load
 mmu_load:
@@ -650,6 +680,20 @@ wopMBC3RAM:
         ror r0, $0x10
 
         strh r0, [r1, $(0x0A + (writeop - readop))]
+
+        mov pc, lr
+
+        /*!
+         * \brief ROM bank switch for MBC3
+         */
+wopMBC3ROM:
+        ands r0, $0x7F
+        subne r0, $0x01
+
+        lsl r0, $0x0E
+
+        ldr r1, =rom_off
+        str r0, [r1]
 
         mov pc, lr
 
