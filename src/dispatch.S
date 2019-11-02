@@ -42,7 +42,7 @@
 
         .text
 
-ZILINIT:.word 0x00479000
+ZILINIT:.word 0x00001FE0
 
         .global dispatch_init
 dispatch_init:

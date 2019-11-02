@@ -49,7 +49,7 @@ tadd:   .space 4
 
         .global timer_init
 timer_init:
-        mov r0, $0x00
+        mov r0, $0x00C00000
         ldr r1, =tadd
         str r0, [r1]
 
@@ -64,10 +64,8 @@ timer_reset_div:
         strh r0, [r1, $2]
 
         /* Clear bits 2 and 3 (bits 0 and 1 are always clear) */
-        bic zil, $0x18
-
-        /* Anticipate an underflow on the next zil step */
-        add zil, $0x20
+        /* Since the timer bits in zil count down, they should be set */
+        orr zil, $0x18
 
         mov pc, lr
 
