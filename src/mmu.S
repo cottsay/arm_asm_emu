@@ -53,7 +53,6 @@
         .equ div, (misc + 0x04)
         .equ intf, (misc + 0x0F)
         .equ lcdc, (misc + 0x40)
-        .equ key1, (misc + 0x4D)
         .equ inte, (misc + 0xFF)
 
         .equ ctyp, (rom + 0x0147)
@@ -75,6 +74,25 @@ input:  .space 0x01
 
         .text
 
+miscdfl:.byte 0xCF, 0x00, 0x7E, 0xFF, 0x00, 0x00, 0x00, 0xF8
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xE1
+        .byte 0x80, 0xBF, 0xF3, 0xFF, 0xBF, 0xFF, 0x3F, 0x00
+        .byte 0xFF, 0xBF, 0x7F, 0xFF, 0x9F, 0xFF, 0xBF, 0xFF
+        .byte 0xFF, 0x00, 0x00, 0xBF, 0x77, 0xF3, 0xF1, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0x00, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        .byte 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+        .byte 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+
+        .align
+
 bios:   .ifdef EMBED_BIOS
         .incbin "bios.rom", 0x00, 0x100
         .align
@@ -88,7 +106,7 @@ bios:   .ifdef EMBED_BIOS
 
         .global mmu_init
 mmu_init:
-        stmfd sp!, {r2-r4, lr}
+        stmfd sp!, {r2-r8, lr}
 
         /* Set up the MMU read operation map */
         @ 0x0000 - 0x3FFF
@@ -109,8 +127,9 @@ mmu_init:
 
         @ 0xC000 - 0xFFFF
         mov r3, $((ropMEM - ropb) >> 2)
-        orr r3, r3, lsl $0x08
-        orr r3, r3, lsl $0x10
+        orr r3, $((ropMEM - ropb) << 6)
+        orr r3, $((ropMEM - ropb) << 14)
+        orr r3, $((ropMISC - ropb) << 22)
 
         ldr r4, =readop
         stmea r4, {r0-r3}
@@ -138,13 +157,16 @@ mmu_init:
         ldr r4, =writeop
         stmea r4, {r0-r3}
 
-        ldr r0, =intf
-        mov r1, $0x01
-        strb r1, [r0]
-
-        ldr r0, =key1
-        mov r1, $0xFF
-        strb r1, [r0]
+        ldr r0, =miscdfl
+        ldr r1, =misc
+        ldmia r0!, {r2-r8, lr}
+        stmia r1!, {r2-r8, lr}
+        ldmia r0!, {r2-r8, lr}
+        stmia r1!, {r2-r8, lr}
+        ldmia r0!, {r2-r8, lr}
+        stmia r1!, {r2-r8, lr}
+        ldmia r0!, {r2-r8, lr}
+        stmia r1!, {r2-r8, lr}
 
         ldr r0, =ctyp
         ldrb r0, [r0]
@@ -165,7 +187,7 @@ mmu_init:
         bl mmu_init_mbc1
 
 mmu_init_ctype_ret:
-        ldmfd sp!, {r2-r4, pc}
+        ldmfd sp!, {r2-r8, pc}
 
 mmu_init_mbc1:
         @ Initialize to RAM bank 0
@@ -377,6 +399,13 @@ mmu_rg:
          */
         .global mmu_wg
 mmu_wg:
+        /* Update LYC comparison */
+        ldr r1, =lcdc
+        ldrb r1, [r1, $0x05]
+        cmp r1, r0, lsr $0x08
+        orreq r0, $0x04
+        bicne r0, $0x04
+
         ldr r1, =lcdc
         strb r0, [r1, $0x01]
         lsr r0, $0x08
@@ -544,6 +573,51 @@ ropCLOCKd:
          * \brief Register read for other misc. clock state
          */
 ropCLOCKo:
+        mov pc, lr
+
+        /*!
+         * \brief Special read routine for WRAM, I/O, int, etc.
+         */
+ropMISC:
+        cmp r0, $0xFF00
+        blt ropMEM
+
+        and r1, r0, $0x00FF
+
+        cmp r1, $0x0011
+        beq ropNR11
+
+        cmp r1, $0x0013
+        beq ropNR13
+
+        cmp r1, $0x0014
+        beq ropNR14
+
+        cmp r1, $0x0041
+        beq ropSTAT
+
+        b ropMEM
+
+ropNR11:
+        ldr r1, =mem
+        ldrb r0, [r1, r0]
+        orr r0, $0x3F
+        mov pc, lr
+
+ropNR13:
+        mov r0, $0xFF
+        mov pc, lr
+
+ropNR14:
+        ldr r1, =mem
+        ldrb r0, [r1, r0]
+        orr r0, $0xBF
+        mov pc, lr
+
+ropSTAT:
+        ldr r1, =mem
+        ldrb r0, [r1, r0]
+        orr r0, $0x80
         mov pc, lr
 
         /* MMU WRITE OPERATIONS */
@@ -794,6 +868,18 @@ wopMISC:
         cmp r1, $0x00460000
         beq wopOAMDMA
 
+        cmp r1, $0x00450000
+        beq wopLYC
+
+        cmp r1, $0x00440000
+        beq wopLY
+
+        cmp r1, $0x00410000
+        beq wopSTAT
+
+        cmp r1, $0x00260000
+        beq wopNR52
+
         @ Check for INTF
         cmp r1, $0x000F0000
         beq wopINTF
@@ -850,6 +936,9 @@ wopBSWP:
         mov pc, lr
 
 wopOAMDMA:
+        ldr r1, =misc
+        strb r0, [r1, $0x46]
+
         stmfd sp!, {r2-r4, lr}
         and r0, $0xFF
         lsl r2, r0, $0x08
@@ -865,6 +954,58 @@ wopOAMDMAb:
         bpl wopOAMDMAb
 
         ldmfd sp!, {r2-r4, pc}
+
+wopLYC:
+        ldr r1, =lcdc
+        strb r0, [r1, $0x05]
+
+        and r0, $0xFF
+        lsr r1, zil, $0x0F
+        and r1, $0xFF
+        cmp r0, r1
+
+        ldr r1, =lcdc
+        ldrb r0, [r1, $0x01]
+        bicne r0, $0x04
+        orreq r0, $0x04
+        strb r0, [r1, $0x01]
+
+        mov pc, lr
+
+wopLY:
+        mov r0, $0x00
+        ldr r1, =lcdc
+        strb r0, [r1, $0x04]
+
+        bic zil, $(0x0F << 0x0F)
+        bic zil, $(0xF0 << 0x0F)
+
+        mov pc, lr
+
+wopSTAT:
+        and r0, $0x78
+
+        ldr r1, =lcdc
+        ldrb r1, [r1, $0x01]
+        and r1, $0x07
+        orr r0, r1
+
+        ldr r1, =lcdc
+        strb r0, [r1, $0x01]
+
+        mov pc, lr
+
+wopNR52:
+        tst r0, $0x80
+
+        ldr r1, =misc
+        ldrb r0, [r1, $0x26]
+
+        biceq r0, $0x80
+        orrne r0, $0x80
+        strb r0, [r1, $0x26]
+
+        mov pc, lr
 
         /*!
          * \brief Special write routine for INTF
