@@ -53,6 +53,12 @@ ziltbl:                  /*    -- Normal Transitions --    */
 
         .global gpu_step
 gpu_step:
+        /* TODO: Optimize the GPU 'sleep' mode */
+        bl mmu_rg
+        tst r0, $0x80
+        biceq zil, $0x1FC0
+        beq gpu_ret
+
         /* Get the GPU mode alone (shifted left by 13) */
         ands r0, zil, $0x6000
 

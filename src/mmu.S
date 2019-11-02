@@ -877,6 +877,9 @@ wopMISC:
         cmp r1, $0x00410000
         beq wopSTAT
 
+        cmp r1, $0x00400000
+        beq wopLCDC
+
         cmp r1, $0x00260000
         beq wopNR52
 
@@ -994,6 +997,33 @@ wopSTAT:
         strb r0, [r1, $0x01]
 
         mov pc, lr
+
+wopLCDC:
+        ldr r1, =lcdc
+        ldrb r1, [r1]
+
+        @ Start HBlank if enabling LCD
+        tst r0, $0x80
+        cmpne r1, $0x80
+        bicmi zil, $0x7000
+        bicmi zil, $0x0FE0
+        bicmi zil, r1
+        orrmi zil, $0x09A0
+
+        @ Clear LY, Mode if disabling LCD
+        tst r0, $0x80
+        ldreq r1, =$0x7FFFE0
+        biceq zil, r1
+
+        ldr r1, =lcdc
+        strb r0, [r1]
+
+        @ Update STAT and LY for good measure
+        lsr r0, zil, $0x07
+        and r0, $(0xFF << 0x08)
+        and r1, zil, $0x6000
+        orr r0, r1, lsr $0x0D
+        b mmu_wg
 
 wopNR52:
         tst r0, $0x80
