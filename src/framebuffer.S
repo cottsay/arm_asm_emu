@@ -103,7 +103,7 @@ display_init_morton:
 
         .global display_scan
 display_scan:
-        stmfd sp!, {r2-r6}
+        stmfd sp!, {r2-r8}
 
         /* Get LCDC */
         bl mmu_rg
@@ -122,40 +122,65 @@ display_scan:
         mov r4, $0x00
 
         /* Start at the beginning of the object list */
-        mov r5, $0x00
-        ldr r6, =sprites
+        ldr r5, =sprites
+        mov r6, $0x00
 
         /*
          * Main Sprite Search Loop
+         * r0: Scratch
+         * r1: Scratch
          * r2: Maximum line for sprite start
          * r3: Minimum line for sprite start
          * r4: Object index in OAM (0-39)
-         * r5: Next index in matching sprite object list (0-9)
-         * lr: Sprite object list address
+         * r5: Sprite object list address
+         * r6: Next index in matching sprite object list (0-9)
+         * r7: Scratch
+         * r8: Scratch
          */
 sprite_next:
+        cmp r4, $0x28
+        cmplo r6, $0x0A
+        bhs sprite_scan_done
+
         mov r0, r4
+        add r4, $0x01
         bl mmu_rgs
 
         /* Check Y */
         and r1, r0, $0x00FF
         cmp r1, r3
         cmpge r2, r1
+        blt sprite_next
 
-        strge r0, [r6, r5, lsl $0x02]
-        addge r5, $0x01
+        mov r7, $0x00
+sprite_sort_next:
+        ldr r1, [r5, r7, lsl $0x02]
+        and r8, r0, $0xFF00
+        and lr, r1, $0xFF00
 
-        /* Go to next object, max of 40 */
-        add r4, $0x01
-        cmp r4, $0x28
-        cmplo r5, $0x0A
-        blo sprite_next
+        cmp r8, lr
+        cmplo r7, r6
+        addlo r7, $0x01
+        blo sprite_sort_next
 
+sprite_bubble_next:
+        str r0, [r5, r7, lsl $0x02]
+
+        cmp r7, r6
+        addlo r7, $0x01
+        movlo r0, r1
+        ldrlo r1, [r5, r7, lsl $0x02]
+        blo sprite_bubble_next
+
+        add r6, $0x01
+        b sprite_next
+
+sprite_scan_done:
         /* Fill the next with 0 */
         mov r0, $0x00
-        str r0, [r6, r5, lsl $0x02]
+        str r0, [r5, r6, lsl $0x02]
 
-        ldmfd sp!, {r2-r6}
+        ldmfd sp!, {r2-r8}
         b gpu_mode_ret
 
         .global display_render
