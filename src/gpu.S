@@ -96,6 +96,7 @@ gpu_mode_ret:
         cmp lr, $(0x9A << 0x08)
         ldreq r0, [r1, $0x14]
         addeq zil, r0
+        bleq display_latch
 
         /* Update STAT and LY with zil */
         and r1, zil, $0x6000

@@ -51,6 +51,9 @@ line:   .space 0x28
         /* 10x32-bit prioritized sprite objects + 1 'zero' */
 sprites:.space 0x2C
 
+wy:     .space 0x01
+        .align
+
         .text
 
         .global display_init
@@ -100,6 +103,16 @@ display_init_morton:
 
         ldmfd sp!, {r2-r5}
         mov pc, lr
+
+        .global display_latch
+display_latch:
+        stmfd sp!, {r9-r10, lr}
+        bl mmu_rgw
+
+        ldr r10, =wy
+        strb r9, [r10]
+
+        ldmfd sp!, {r9-r10, pc}
 
         .global display_scan
 display_scan:
@@ -394,6 +407,12 @@ display_render_win:
         /* Fix the WX offset */
         subs r10, $0x07
         movmi r10, $0x00
+
+        /* Use the latched WY value */
+        ldr r1, =wy
+        ldrb r9, [r1]
+        add r0, r9, $0x01
+        strb r0, [r1]
 
         /* Put map base in r7 */
         tst r2, $0x40
