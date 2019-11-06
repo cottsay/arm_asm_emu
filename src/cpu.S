@@ -833,15 +833,12 @@ opDHL:   @0x2B
 opIL:    @0x2C
         bic zrf, $flZNH         @ reset zero, subtract and half-carry
 
-        ror zhl, $0x18
-
-        add zhl, $0x01000000
-        tst zhl, $0x0F000000    @ if lower nibble is zero
+        add zhl, $0x00010000
+        tst zhl, $0x000F0000    @ if lower nibble is zero
         orreq zrf, $flH                 @ set half-carry
-        tst zhl, $0xFF000000    @ if result is completely zero
+        tst zhl, $0x00FF0000    @ if result is completely zero
         orreq zrf, $flZ                 @ set zero
-
-        ror zhl, $0x08
+        subeq zhl, $0x01000000
 
         add zil, $1
         add zpc, $0x00010000
