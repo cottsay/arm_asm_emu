@@ -2,7 +2,7 @@
  * \file stat.S
  *
  * \copyright
- * Copyright &copy; 2016, Scott K Logan
+ * Copyright &copy; 2019, Scott K Logan
  *
  * \copyright
  * All rights reserved.
@@ -40,9 +40,9 @@
 
         .text
 
-smsg:   .ascii "   A    B    C    D    E    F   HL   SP   PC  (PC) FLAG  IC   TC   GC   GL   IF   IE  TMAC\n"
+smsg:   .ascii "   A   BC    D    E    F   HL   SP   PC  (PC) FLAG  IC   TC   GC   GL   IF   IE  TMAC\n"
 smsg_e: .align
-emsg:   .ascii "\n------------------------------------------------------------------------------------------\n"
+emsg:   .ascii "\n-------------------------------------------------------------------------------------\n"
 emsg_e: .align
 hexch:  .ascii "0123456789ABCDEF"
         .align
@@ -68,7 +68,7 @@ stat_print:
 
         mov r8, sp
         sub sp, $255
-        sub sp, $35
+        sub sp, $30
         mov r7, sp
 
         /* Copy in smsg (85 bytes) */
@@ -79,21 +79,16 @@ stat_print:
         stmia r7!, {r1-r6}
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
-        ldmia r0!, {r1-r4}
-        stmia r7!, {r1-r4}
-        ldr r1, [r0]
-        str r1, [r7]
-        add r7, $0x03
+        ldmia r0!, {r1-r3}
+        stmia r7!, {r1-r3}
+        ldrh r1, [r0]
+        strh r1, [r7], $0x02
 
         @ zra
-        ldr r0, [r8, $4]
-        bl hex_print
-
-        @ zrb
         ldr r0, [r8, $8]
         bl hex_print
 
-        @ zrc
+        @ zbc
         ldr r0, [r8, $12]
         bl hex_print
 
@@ -210,22 +205,21 @@ stat_print:
         stmia r7!, {r1-r6}
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
-        ldmia r0!, {r1-r5}
-        stmia r7!, {r1-r5}
-        ldrh r1, [r0]
-        strh r1, [r7]
-        add r7, $0x02
+        ldmia r0!, {r1-r4}
+        stmia r7!, {r1-r4}
+        ldrb r1, [r0]
+        strb r1, [r7], $0x01
 
         /* Print whole string */
         mov r0, $1
         mov r1, sp
         mov r2, $256
-        add r2, $17
+        add r2, $2
         mov r7, $4
         svc $0
 
         add sp, $255
-        add sp, $35
+        add sp, $30
 
         ldmfd sp!, {r2-r8, pc}
 
