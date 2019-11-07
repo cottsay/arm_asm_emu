@@ -222,6 +222,32 @@ cpu_inst_b:
         stmea r1, {r0, lr}
         b cpu_ret
 
+cpu_oam_bug_double:
+        @ Check register range
+        subs r1, $0xFE00
+        rsbhss r1, $0x00FF
+        bhs cpu_oam_bug_lcd
+
+cpu_oam_bug:
+        @ Check register range
+        subs r0, $0xFE00
+        rsbhss r0, $0x00FF
+        blo cpu_ret
+
+cpu_oam_bug_lcd:
+        @ Check LCD mode
+        and r0, zil, $0x6000
+        cmp r0, $0x4000
+        bne cpu_ret
+
+        @ Corrupt (some) OAM
+        ldr r0, =$0xFE08CCCC
+        bl mmu_wh
+        ldr r0, =$0xFE0ACCCC
+        bl mmu_wh
+
+        b cpu_ret
+
         .ltorg    @ keep literal pool close
 
 /* SPECIAL INSTRUCTIONS */
@@ -259,11 +285,12 @@ opLDBCA: @0x02
         b cpu_ret
 
 opIBC:   @0x03
+        lsr r0, zbc, $0x10
         add zbc, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opIB:    @0x04
         bic zrf, $flZNH         @ reset zero, subtract and half-carry
@@ -358,11 +385,12 @@ opLDABC: @0x0A
         b cpu_ret
 
 opDBC:   @0x0B
+        lsr r0, zbc, $0x10
         sub zbc, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opIC:    @0x0C
         bic zrf, $flZNH         @ reset zero, subtract and half-carry
@@ -442,11 +470,12 @@ opLDDEA: @0x12
         b cpu_ret
 
 opIDE:   @0x13
+        lsr r0, zde, $0x10
         add zde, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opID:    @0x14
         bic zrf, $flZNH         @ reset zero, subtract and half-carry
@@ -543,11 +572,12 @@ opLDADE: @0x1A
         b cpu_ret
 
 opDDE:   @0x1B
+        lsr r0, zde, $0x10
         sub zde, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opIE:    @0x1C
         bic zrf, $flZNH         @ reset zero, subtract and half-carry
@@ -640,11 +670,12 @@ opLDHLiA:@0x22
         b cpu_ret
 
 opIHL:   @0x23
+        lsr r0, zhl, $0x10
         add zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opIH:    @0x24
         bic zrf, $flZNH         @ reset zero, subtract and half-carry
@@ -753,18 +784,21 @@ opLDAHLi:@0x2A
         bl mmu_rb
         mov zra, r0
 
+        lsr r0, zhl, $0x10
+
         add zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opDHL:   @0x2B
+        lsr r0, zhl, $0x10
         sub zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opIL:    @0x2C
         bic zrf, $flZNH         @ reset zero, subtract and half-carry
@@ -851,11 +885,12 @@ opLDHLdA:@0x32
         b cpu_ret
 
 opISP:   @0x33
+        lsr r0, zsp, $0x10
         add zsp, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opIHLm:  @0x34
         lsr r0, zhl, $0x10
@@ -963,18 +998,21 @@ opLDAHLd:@0x3A
         bl mmu_rb
         mov zra, r0
 
+        lsr r0, zhl, $0x10
+
         sub zhl, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opDSP:   @0x3B
+        lsr r0, zsp, $0x10
         sub zsp, $0x00010000
 
         add zil, $2
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opIA:    @0x3C
         bic zrf, $flN           @ reset subtract
@@ -2750,9 +2788,13 @@ opPOPBC: @0xC1
 
         lsl zbc, r0, $0x10
 
+        lsr r0, zsp, $0x10
+        sub r0, $0x01
+        sub r1, r0, $0x01
+
         add zil, $3
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug_double
 
 opJPNZnn:@0xC2
         add zil, $3
@@ -2800,9 +2842,13 @@ opPUSBC: @0xC5
         orr r0, zsp, zbc, lsr $0x10
         bl mmu_wh
 
+        lsr r0, zsp, $0x10
+        add r0, $0x01
+        add r1, r0, $0x01
+
         add zil, $4
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug_double
 
 opAAn:   @0xC6
         bl mmu_ri1
@@ -2988,7 +3034,7 @@ opPOPDE: @0xD1
 
         add zil, $3
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opJPNCnn:@0xD2
         add zil, $3
@@ -3187,7 +3233,7 @@ opPOPHL: @0xE1
 
         add zil, $3
         add zpc, $0x00010000
-        b cpu_ret
+        b cpu_oam_bug
 
 opLDFCA: @0xE2
         orr r0, zbc, $0xFF000000

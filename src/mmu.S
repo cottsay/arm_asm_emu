@@ -579,8 +579,11 @@ ropCLOCKo:
          * \brief Special read routine for WRAM, I/O, int, etc.
          */
 ropMISC:
-        cmp r0, $0xFF00
+        cmp r0, $0xFE00
         blt ropMEM
+
+        cmp r0, $0xFF00
+        blt ropOAM
 
         and r1, r0, $0x00FF
 
@@ -597,6 +600,17 @@ ropMISC:
         beq ropSTAT
 
         b ropMEM
+
+        /*!
+         * \brief Special read routine for OAM
+         */
+ropOAM:
+        tst zil, $0x4000
+        ldreq r1, =mem
+        ldreqb r0, [r1, r0]
+        moveq pc, lr
+        mov r0, $0xFF
+        mov pc, lr
 
 ropNR11:
         ldr r1, =mem
