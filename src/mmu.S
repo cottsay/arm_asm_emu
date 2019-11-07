@@ -1007,8 +1007,8 @@ wopLCDC:
         cmpne r1, $0x80
         bicmi zil, $0x7000
         bicmi zil, $0x0FE0
-        bicmi zil, r1
-        orrmi zil, $0x09A0
+        orrmi zil, $0x4D00
+        orrmi zil, $0x00A0
 
         @ Clear LY, Mode if disabling LCD
         tst r0, $0x80
