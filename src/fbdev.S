@@ -64,7 +64,8 @@ screen_init:
         mov r2, $0x00
         mov r7, $0x05
         svc $0
-        mov r4, r0
+        movs r4, r0
+        beq screen_init_end
 
         /* Get the line length using ioctl */
         sub sp, $0x44
@@ -76,10 +77,15 @@ screen_init:
         swi $0
 
         ldr r2, [sp, $0x2C]
+        add sp, $0x44
+
+        cmp r0, $0x00
+        bne screen_init_end
+        cmp r2, $0x00
+        beq screen_init_end
+
         ldr r0, =llen
         str r2, [r0]
-
-        add sp, $0x44
 
         /* Map the display */
         mov r0, $0x00
@@ -94,6 +100,7 @@ screen_init:
         ldr r1, =display
         str r0, [r1]
 
+screen_init_end:
         ldmfd sp!, {r2-r5, r7}
         mov pc, lr
 
@@ -109,6 +116,8 @@ screen_putline_dmg:
 
         ldr lr, =display
         ldr lr, [lr]
+        cmp lr, $0x00
+        beq gpu_mode_ret
         add r1, lr
 
         stmfd sp!, {r2-r12}

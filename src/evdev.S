@@ -66,11 +66,17 @@ input_init:
         ldr r1, =devfd
         str r3, [r1]
 
+        cmp r0, $0x00
+        bmi input_init_end
+
         /* Get the flags */
         mov r1, $0x03
         mov r2, $0x00
         mov r7, $0x37
         svc $0
+
+        cmp r0, $0x00
+        bne input_init_end
 
         /* Set the flags */
         orr r2, r0, $0x800
@@ -78,6 +84,7 @@ input_init:
         mov r1, $0x04
         svc $0
 
+input_init_end:
         ldmfd sp!, {r1-r3, r7}
         mov pc, lr
 
@@ -86,9 +93,12 @@ input_step:
         stmfd sp!, {r1-r2, r7}
         sub sp, $0x10
 
-        /* Try to read 16 bytes */
         ldr r0, =devfd
         ldr r0, [r0]
+        cmp r0, $0x00
+        bmi input_ret
+
+        /* Try to read 16 bytes */
         mov r1, sp
         mov r2, $0x10
         mov r7, $0x03
