@@ -40,9 +40,9 @@
 
         .text
 
-smsg:   .ascii "   A   BC   DE    F   HL   SP   PC  (PC) FLAG  IC   TC   GC   GL   IF   IE  TMAC\n"
+smsg:   .ascii "  AF   BC   DE   HL   SP   PC  (PC) FLAG  IC   TC   GC   GL   IF   IE  TMAC\n"
 smsg_e: .align
-emsg:   .ascii "\n--------------------------------------------------------------------------------\n"
+emsg:   .ascii "\n---------------------------------------------------------------------------\n"
 emsg_e: .align
 hexch:  .ascii "0123456789ABCDEF"
         .align
@@ -68,10 +68,9 @@ stat_print:
 
         mov r8, sp
         sub sp, $255
-        sub sp, $15
         mov r7, sp
 
-        /* Copy in smsg (85 bytes) */
+        /* Copy in smsg (76 bytes) */
         ldr r0, =smsg
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
@@ -79,13 +78,13 @@ stat_print:
         stmia r7!, {r1-r6}
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
-        ldmia r0!, {r1-r2}
-        stmia r7!, {r1-r2}
-        ldrb r1, [r0]
-        strb r1, [r7], $0x01
+        ldr r1, [r0]
+        str r1, [r7], $0x04
 
-        @ zra
-        ldr r0, [r8, $12]
+        @ zaf
+        ldrb r0, [r8, $24]
+        ldr lr, [r8, $12]
+        orr r0, lr, lsl $0x08
         bl hex_print
 
         @ zbc
@@ -94,10 +93,6 @@ stat_print:
 
         @ zde
         ldrh r0, [r8, $22]
-        bl hex_print
-
-        @ zrf
-        ldr r0, [r8, $24]
         bl hex_print
 
         @ zhl
@@ -193,7 +188,7 @@ stat_print:
         bl mmu_rh
         bl hex_print
 
-        /* Copy in emsg (86 bytes) */
+        /* Copy in emsg (78 bytes) */
         ldr r0, =emsg
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
@@ -201,18 +196,19 @@ stat_print:
         stmia r7!, {r1-r6}
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
-        ldmia r0!, {r1-r3}
-        stmia r7!, {r1-r3}
+        ldr r1, [r0], $0x04
+        str r1, [r7], $0x04
+        ldrb r1, [r0]
+        strb r1, [r7]
 
         /* Print whole string */
         mov r0, $1
         mov r1, sp
-        mov r2, $243
+        mov r2, $228
         mov r7, $4
         svc $0
 
         add sp, $255
-        add sp, $15
 
         ldmfd sp!, {r2-r8, pc}
 
