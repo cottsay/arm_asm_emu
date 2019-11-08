@@ -40,9 +40,9 @@
 
         .text
 
-smsg:   .ascii "   A   BC    D    E    F   HL   SP   PC  (PC) FLAG  IC   TC   GC   GL   IF   IE  TMAC\n"
+smsg:   .ascii "   A   BC   DE    F   HL   SP   PC  (PC) FLAG  IC   TC   GC   GL   IF   IE  TMAC\n"
 smsg_e: .align
-emsg:   .ascii "\n-------------------------------------------------------------------------------------\n"
+emsg:   .ascii "\n--------------------------------------------------------------------------------\n"
 emsg_e: .align
 hexch:  .ascii "0123456789ABCDEF"
         .align
@@ -68,7 +68,7 @@ stat_print:
 
         mov r8, sp
         sub sp, $255
-        sub sp, $30
+        sub sp, $15
         mov r7, sp
 
         /* Copy in smsg (85 bytes) */
@@ -79,25 +79,21 @@ stat_print:
         stmia r7!, {r1-r6}
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
-        ldmia r0!, {r1-r3}
-        stmia r7!, {r1-r3}
-        ldrh r1, [r0]
-        strh r1, [r7], $0x02
+        ldmia r0!, {r1-r2}
+        stmia r7!, {r1-r2}
+        ldrb r1, [r0]
+        strb r1, [r7], $0x01
 
         @ zra
-        ldr r0, [r8, $8]
-        bl hex_print
-
-        @ zbc
         ldr r0, [r8, $12]
         bl hex_print
 
-        @ zrd
-        ldr r0, [r8, $16]
+        @ zbc
+        ldrh r0, [r8, $18]
         bl hex_print
 
-        @ zre
-        ldr r0, [r8, $20]
+        @ zde
+        ldrh r0, [r8, $22]
         bl hex_print
 
         @ zrf
@@ -205,21 +201,18 @@ stat_print:
         stmia r7!, {r1-r6}
         ldmia r0!, {r1-r6}
         stmia r7!, {r1-r6}
-        ldmia r0!, {r1-r4}
-        stmia r7!, {r1-r4}
-        ldrb r1, [r0]
-        strb r1, [r7], $0x01
+        ldmia r0!, {r1-r3}
+        stmia r7!, {r1-r3}
 
         /* Print whole string */
         mov r0, $1
         mov r1, sp
-        mov r2, $256
-        add r2, $2
+        mov r2, $243
         mov r7, $4
         svc $0
 
         add sp, $255
-        add sp, $30
+        add sp, $15
 
         ldmfd sp!, {r2-r8, pc}
 

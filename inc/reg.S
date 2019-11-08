@@ -38,11 +38,10 @@
  * \author Scott K Logan
  ******************************************************************************/
 
-zop     .req r3
-zra     .req r4
-zbc     .req r5
-zrd     .req r6
-zre     .req r7
+zop     .req r4
+zra     .req r5
+zbc     .req r6
+zde     .req r7
 zrf     .req r8
 zhl     .req r9
 zsp     .req r10
