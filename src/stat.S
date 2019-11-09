@@ -160,9 +160,8 @@ stat_print:
         bl hex_print
 
         @ gc
-        lsl r0, r12, $0x13
-        lsr r0, $0x18
-        rsb r0, $0x80
+        and r0, r12, $0x0FE0
+        lsr r0, $0x05
         bl hex_print
 
         @ gl

@@ -42,21 +42,22 @@
 
         .text
 
-ziltbl:                  /*    -- Normal Transitions --    */
-        .word 0x0000BD80 /* HBlank -> OAM    (+20  cycles) */
-        .word 0x000071C0 /* VBlank -> VBlank (+114 cycles) */
-        .word 0x00001AA0 /* OAM    -> VRAM   (+43  cycles) */
-        .word 0xFFFF99A0 /* VRAM   -> HBlank (+51  cycles) */
-                         /*    -- Special Transitions --   */
-        .word 0xFFFFD440 /* OAM    -> VBlank (+94  cycles) */
-        .word 0xFFB32BC0 /* VBlank -> OAM    (-94  cycles) */
+                         /*               |EIIIIIHS|BLLLLLLL|LMMMGGGG|GGGTTCCC|                           */
+ziltbl:                  /*    -- Normal Transitions --     |        |  + -  -|                           */
+        .word 0x0000C280 /* HBlank -> OAM    (+20  cycles) 0|11000010|10000000| 00->10, inc L, G = (+20)  */
+        .word 0x00008E40 /* VBlank -> VBlank (+114 cycles) 0|10001110|01000000| 01->01, inc L, G = (+114) */
+        .word 0x00002560 /* OAM    -> VRAM   (+43  cycles) 0|00100101|01100000| 10->11,      , G = (+43)  */
+        .word 0xFFFFA660 /* VRAM   -> HBlank (+51  cycles) 1|10100110|01100000| 11->00,      , G = (+51)  */
+                         /*    -- Special Transitions --    |        |        |                           */
+        .word 0xFFFFEBC0 /* OAM    -> VBlank (+94  cycles) 1|11101011|11000000| 10->01,      , G = (+94)  */
+        .word 0xFFB31440 /* VBlank -> OAM    (-94  cycles) *|00010100|01000000| 01->10, L-154, G = (-94)  */
 
         .global gpu_step
 gpu_step:
         /* TODO: Optimize the GPU 'sleep' mode */
         bl mmu_rg
         tst r0, $0x80
-        biceq zil, $0x1FC0
+        orreq zil, $0x0FE0
         beq gpu_ret
 
         /* Get the GPU mode alone (shifted left by 13) */

@@ -1007,13 +1007,14 @@ wopLCDC:
         cmpne r1, $0x80
         bicmi zil, $0x7000
         bicmi zil, $0x0FE0
-        orrmi zil, $0x4D00
-        orrmi zil, $0x00A0
+        orrmi zil, $0x4200
+        orrmi zil, $0x0060
 
         @ Clear LY, Mode if disabling LCD
         tst r0, $0x80
-        ldreq r1, =$0x7FFFE0
-        biceq zil, r1
+        biceq zil, $0x007F0000
+        biceq zil, $0x0000F000
+        orreq zil, $0x00000FE0
 
         ldr r1, =lcdc
         strb r0, [r1]
