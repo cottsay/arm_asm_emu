@@ -42,15 +42,19 @@
 
         .text
 
-                         /*               |EIIIIIHS|BLLLLLLL|LMMMGGGG|GGGTTCCC|                           */
-ziltbl:                  /*    -- Normal Transitions --     |        |  + -  -|                           */
-        .word 0x0000C280 /* HBlank -> OAM    (+20  cycles) 0|11000010|10000000| 00->10, inc L, G = (+20)  */
-        .word 0x00008E40 /* VBlank -> VBlank (+114 cycles) 0|10001110|01000000| 01->01, inc L, G = (+114) */
-        .word 0x00002560 /* OAM    -> VRAM   (+43  cycles) 0|00100101|01100000| 10->11,      , G = (+43)  */
-        .word 0xFFFFA660 /* VRAM   -> HBlank (+51  cycles) 1|10100110|01100000| 11->00,      , G = (+51)  */
-                         /*    -- Special Transitions --    |        |        |                           */
-        .word 0xFFFFEBC0 /* OAM    -> VBlank (+94  cycles) 1|11101011|11000000| 10->01,      , G = (+94)  */
-        .word 0xFFB31440 /* VBlank -> OAM    (-94  cycles) *|00010100|01000000| 01->10, L-154, G = (-94)  */
+                         /*               |EIIIIIHS|BLLLLLLL|LMMMGGGG|GGGTTCCC|                             */
+ziltbl:                  /*    -- Normal Transitions --     |        |  + -  -|                             */
+        .word 0x0000C280 /* HBlank -> OAM    (+20  cycles) 0|11000010|10000000| 000->100, inc L, G = (+20)  */
+        .word 0x0000C280 /* HBlank -> OAM    (+20  cycles) 0|11000010|10000000| 000->100, inc L, G = (+20)  */
+        .word 0x00008E40 /* VBlank -> VBlank (+114 cycles) 0|10001110|01000000| 010->010, inc L, G = (+114) */
+        .word 0x00008E40 /* VBlank -> VBlank (+114 cycles) 0|10001110|01000000| 010->010, inc L, G = (+114) */
+        .word 0x00002560 /* OAM    -> VRAM   (+43  cycles) 0|00100101|01100000| 100->110,      , G = (+43)  */
+        .word 0x00002560 /* OAM    -> VRAM   (+43  cycles) 0|00100101|01100000| 100->110,      , G = (+43)  */
+        .word 0xFFFFA660 /* VRAM   -> HBlank (+51  cycles) 1|10100110|01100000| 110->000,      , G = (+51)  */
+        .word 0xFFFFA660 /* VRAM   -> HBlank (+51  cycles) 1|10100110|01100000| 110->000,      , G = (+51)  */
+                         /*    -- Special Transitions --    |        |        |                             */
+        .word 0xFFFFEBC0 /* OAM    -> VBlank (+94  cycles) 1|11101011|11000000| 100->010,      , G = (+94)  */
+        .word 0xFFB31440 /* VBlank -> OAM    (-94  cycles) *|00010100|01000000| 010->100, L-154, G = (-94)  */
 
         .global gpu_step
 gpu_step:
@@ -76,12 +80,12 @@ gpu_step:
 
         .global gpu_mode_ret
 gpu_mode_ret:
-        /* Get the GPU mode alone (shifted left by 13) */
-        and r0, zil, $0x6000
+        /* Get the GPU mode alone (shifted left by 12) */
+        and r0, zil, $0x7000
 
         /* Add the corresponding transition value from ziltbl */
         ldr r1, =ziltbl
-        ldr r0, [r1, r0, lsr $0x0B]
+        ldr r0, [r1, r0, lsr $0x0A]
         add zil, r0
 
         /* Get the line number alone (shifted left by 8) */
@@ -90,12 +94,12 @@ gpu_mode_ret:
 
         /* On line 144, special transition to VBlank */
         cmp lr, $(0x90 << 0x08)
-        ldreq r0, [r1, $0x10]
+        ldreq r0, [r1, $0x20]
         addeq zil, r0
 
         /* On line 154, special transition from VBlank */
         cmp lr, $(0x9A << 0x08)
-        ldreq r0, [r1, $0x14]
+        ldreq r0, [r1, $0x24]
         addeq zil, r0
         bleq display_latch
 
