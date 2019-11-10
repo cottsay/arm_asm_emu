@@ -52,7 +52,7 @@ devpath:.asciz "/dev/input/event0"
 
         .global input_init
 input_init:
-        stmfd sp!, {r1-r3, r7}
+        stmfd sp!, {r3, r7}
 
         /* Open the device */
         ldr r0, =devpath
@@ -85,12 +85,12 @@ input_init:
         svc $0
 
 input_init_end:
-        ldmfd sp!, {r1-r3, r7}
+        ldmfd sp!, {r3, r7}
         mov pc, lr
 
         .global input_step
 input_step:
-        stmfd sp!, {r1-r2, r7}
+        str r7, [sp, $-0x04]!
         sub sp, $0x10
 
         ldr r0, =devfd
@@ -159,7 +159,7 @@ input_step:
 
 input_step_ret:
         add sp, $0x10
-        ldmfd sp!, {r1-r2, r7}
+        ldr r7, [sp], $0x04
         b input_ret
 
         .end

@@ -56,7 +56,7 @@ fbdev:  .asciz "/dev/fb0"
 
         .global screen_init
 screen_init:
-        stmfd sp!, {r2-r5, r7}
+        stmfd sp!, {r3-r5, r7}
 
         /* Open the device */
         ldr r0, =fbdev
@@ -101,7 +101,7 @@ screen_init:
         str r0, [r1]
 
 screen_init_end:
-        ldmfd sp!, {r2-r5, r7}
+        ldmfd sp!, {r3-r5, r7}
         mov pc, lr
 
         /*
@@ -120,7 +120,7 @@ screen_putline_dmg:
         beq gpu_mode_ret
         add r1, lr
 
-        stmfd sp!, {r2-r12}
+        stmfd sp!, {r3-r12}
 
         ldr r3, =dmgpal
 
@@ -200,6 +200,6 @@ screen_put_16:
         subs r4, $0x01
         bne screen_put_16
 
-        ldmfd sp!, {r2-r12}
+        ldmfd sp!, {r3-r12}
 
         b gpu_mode_ret

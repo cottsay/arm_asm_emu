@@ -106,7 +106,7 @@ bios:   .ifdef EMBED_BIOS
 
         .global mmu_init
 mmu_init:
-        stmfd sp!, {r2-r8, lr}
+        stmfd sp!, {r3-r8, lr}
 
         /* Set up the MMU read operation map */
         @ 0x0000 - 0x3FFF
@@ -187,7 +187,7 @@ mmu_init:
         bl mmu_init_mbc1
 
 mmu_init_ctype_ret:
-        ldmfd sp!, {r2-r8, pc}
+        ldmfd sp!, {r3-r8, pc}
 
 mmu_init_mbc1:
         @ Initialize to RAM bank 0
@@ -232,7 +232,7 @@ mmu_init_mbc1:
         mov pc, lr
 
 mmu_init_mbc3:
-        stmfd sp!, {lr}
+        str lr, [sp, $-0x04]!
 
         @ Start with MBC1
         bl mmu_init_mbc1
@@ -251,11 +251,11 @@ mmu_init_mbc3:
 
         strh r0, [r1, $0x06]
 
-        ldmfd sp!, {pc}
+        ldr pc, [sp], $0x04
 
         .global mmu_load
 mmu_load:
-        stmfd sp!, {r2, r7-r8}
+        stmfd sp!, {r7-r8}
 
         /* Open the file */
         mov r1, $0
@@ -282,7 +282,7 @@ mmu_load:
         svc $0
 
 mmu_load_end:
-        ldmfd sp!, {r2, r7-r8}
+        ldmfd sp!, {r7-r8}
         mov pc, lr
 
         .global mmu_ri
@@ -323,7 +323,7 @@ mmu_rt:
 
         .global mmu_rh
 mmu_rh:
-        stmfd sp!, {r2, lr}
+        str lr, [sp, $-0x04]!
         add r2, r0, $0x00000001
         bl mmu_rb
         mov r1, r0
@@ -331,11 +331,11 @@ mmu_rh:
         mov r2, r1
         bl mmu_rb
         orr r0, r2, r0, lsl $0x08
-        ldmfd sp!, {r2, pc}
+        ldr pc, [sp], $0x04
 
         .global mmu_wh
 mmu_wh:
-        stmfd sp!, {r2, lr}
+        str lr, [sp, $-0x04]!
         add r2, r0, $0x00010000
         bl mmu_wb
         lsr r0, r2, $0x10
@@ -343,7 +343,7 @@ mmu_wh:
         orr r0, r2, lsl $0x08
         ror r0, $0x10
         bl mmu_wb
-        ldmfd sp!, {r2, pc}
+        ldr pc, [sp], $0x04
 
         .global mmu_wt
 mmu_wt:

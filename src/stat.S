@@ -51,7 +51,7 @@ nimsg:  .ascii "A CPU exception has occurred\n\n"
 
         .global stat_cpu_exception
 stat_cpu_exception:
-        stmfd sp!, {r2, r7}
+        str r7, [sp, $-0x04]!
 
         mov r0, $0x01
         ldr r1, =nimsg
@@ -59,12 +59,12 @@ stat_cpu_exception:
         mov r7, $0x04
         svc $0
 
-        ldmfd sp!, {r2, r7}
+        ldr r7, [sp], $0x04
         mov pc, lr
 
         .global stat_print
 stat_print:
-        stmfd sp!, {r2-r8, lr}
+        stmfd sp!, {r3-r8, lr}
 
         mov r8, sp
         sub sp, $255
@@ -209,7 +209,7 @@ stat_print:
 
         add sp, $255
 
-        ldmfd sp!, {r2-r8, pc}
+        ldmfd sp!, {r3-r8, pc}
 
 hex_print:
         ldr r3, =hexch

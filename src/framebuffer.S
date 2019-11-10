@@ -58,7 +58,7 @@ wy:     .space 0x01
 
         .global display_init
 display_init:
-        stmfd sp!, {r2-r5}
+        stmfd sp!, {r3-r5}
 
         /* Populate the morton table */
         ldr r0, =morton
@@ -101,7 +101,7 @@ display_init_morton:
         ldr r1, =sprites
         str r0, [r1]
 
-        ldmfd sp!, {r2-r5}
+        ldmfd sp!, {r3-r5}
         mov pc, lr
 
         .global display_latch
@@ -116,7 +116,7 @@ display_latch:
 
         .global display_scan
 display_scan:
-        stmfd sp!, {r2-r8}
+        stmfd sp!, {r3-r8}
 
         /* Get LCDC */
         bl mmu_rg
@@ -193,12 +193,12 @@ sprite_scan_done:
         mov r0, $0x00
         str r0, [r5, r6, lsl $0x02]
 
-        ldmfd sp!, {r2-r8}
+        ldmfd sp!, {r3-r8}
         b gpu_mode_ret
 
         .global display_render
 display_render:
-        stmfd sp!, {r2-r11}
+        stmfd sp!, {r3-r11}
 
         bl mmu_rgr
 
@@ -783,7 +783,7 @@ display_render_sprite_below:
         b display_render_sprite
 
 display_render_done:
-        ldmfd sp!, {r2-r11}
+        ldmfd sp!, {r3-r11}
         b gpu_mode_ret
 
         .global display_putline

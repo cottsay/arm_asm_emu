@@ -54,7 +54,7 @@ ttydev: .asciz "/dev/null"
 
         .global serial_init
 serial_init:
-        stmfd sp!, {r2, r7}
+        str r7, [sp, $-0x04]
 
         /* Open the device */
         ldr r0, =ttydev
@@ -67,7 +67,7 @@ serial_init:
         ldr r1, =ttyfd
         str r0, [r1]
 
-        ldmfd sp!, {r2, r7}
+        ldr r7, [sp], $0x04
         mov pc, lr
 
         .global serial_xfer
