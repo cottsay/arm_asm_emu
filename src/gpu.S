@@ -122,12 +122,40 @@ gpu_mode_ret:
         bic r0, r2, $0xFF000000
         bl mmu_wg
 
-        /* Trigger interrupt on VBlank */
+        /* Trigger interrupts */
+
         and r1, zil, $0x7000
+        mvn lr, r2
+
+        @ VBlank
         cmp r0, $0x90
         cmpeq r1, $0x2000
         moveq r0, $intV
-        bleq mmu_int
+        movne r0, $0x00
+
+        @ Mode 0
+        cmp r1, $0x0000
+        tsteq lr, $0x08
+        orreq r0, $intL
+
+        @ Mode 1
+        cmp r1, $0x2000
+        tsteq lr, $0x10
+        orreq r0, $intL
+
+        @ Mode 2
+        cmp r1, $0x4000
+        tsteq lr, $0x20
+        orreq r0, $intL
+
+        @ LY=LYC
+        cmp r1, $0x4000
+        tsteq lr, $0x40
+        tsteq lr, $0x04
+        orreq r0, $intL
+
+        cmp r0, $0x00
+        blne mmu_int
 
         b gpu_ret
 
