@@ -64,8 +64,10 @@ timer_reset_div:
         strh r0, [r1, $2]
 
         /* Clear bits 2 and 3 (bits 0 and 1 are always clear) */
-        /* Since the timer bits in zil count down, they should be set */
-        orr zil, $0x18
+        bic zil, $0x18
+
+        /* Anticipate an underflow on the next zil step */
+        add zil, $0x20
 
         mov pc, lr
 
@@ -78,9 +80,23 @@ timer_step:
         /* Anticipate an underflow on the next zil step */
         add zil, $0x20
 
-        /* Increment tadd */
+        /* Get tadd */
         ldr r0, =tadd
         ldr r1, [r0]
+
+        /* Check if overflow happened 1 cycle ago */
+        /* TODO: This really needs to be optimized */
+        tst r1, $0x0100
+        bicne r1, $0x0100
+        subne zil, $0x08
+        strne r1, [r0]
+        andne r0, r1, $0xFF
+        orrne r0, $0xFF000000
+        orrne r0, $0x00050000
+        ldrne lr, =timer_ret
+        bne mmu_wb
+
+        /* Increment tadd */
         add r1, $0x00100000
         str r1, [r0]
 
@@ -112,8 +128,12 @@ timer_step:
         ror r0, $0x10
         adds r0, $0x01000000
 
-        /* If counter overflows, reset it to modulo */
-        orrcs r0, r0, lsl $0x18
+        /* If counter overflows, save the modulo and set an event in 1 cycle */
+        ldrcs r1, =tadd
+        andcs lr, r0, $0xFF
+        orrcs lr, $0x0100
+        strcsh lr, [r1]
+        subcs zil, $0x18
         ror r0, $0x10
 
         bl mmu_wt
