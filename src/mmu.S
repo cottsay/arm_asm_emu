@@ -1118,6 +1118,8 @@ wopSC:
          * access since they are read almost every single cycle.
          */
 wopINTE:
+        orr r0, $0xE0
+
         ldr r1, =misc
         strb r0, [r1, $0xFF] @ inte
         ldrb r1, [r1, $0x0F] @ intf

@@ -165,25 +165,25 @@ cpu_int:
         bl mmu_wh
 
         /* Figure out which interrupt to service */
-        tst zil, $(intV << intO)
-        movne r0, $intV
-        movne zpc, $0x00400000
-
-        tst zil, $(intL << intO)
-        movne r0, $intL
-        movne zpc, $0x00480000
-
-        tst zil, $(intT << intO)
-        movne r0, $intT
-        movne zpc, $0x00500000
+        tst zil, $(intJ << intO)
+        movne r0, $intJ
+        movne zpc, $0x00600000
 
         tst zil, $(intS << intO)
         movne r0, $intS
         movne zpc, $0x00580000
 
-        tst zil, $(intJ << intO)
-        movne r0, $intJ
-        movne zpc, $0x00600000
+        tst zil, $(intT << intO)
+        movne r0, $intT
+        movne zpc, $0x00500000
+
+        tst zil, $(intL << intO)
+        movne r0, $intL
+        movne zpc, $0x00480000
+
+        tst zil, $(intV << intO)
+        movne r0, $intV
+        movne zpc, $0x00400000
 
         bl mmu_sint
 
