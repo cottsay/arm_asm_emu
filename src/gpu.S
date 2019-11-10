@@ -80,6 +80,9 @@ gpu_step:
 
         .global gpu_mode_ret
 gpu_mode_ret:
+        /* Put STAT and LYC in r2 */
+        bl mmu_rgc
+
         /* Get the GPU mode alone (shifted left by 12) */
         and r0, zil, $0x7000
 
@@ -92,6 +95,7 @@ gpu_mode_ret:
         /* Get the line number alone (shifted left by 8) */
         lsr lr, zil, $0x07
         and lr, $(0xFF << 0x08)
+        orr r2, lr
 
         /* On line 144, special transition to VBlank */
         cmp lr, $(0x90 << 0x08)
@@ -105,9 +109,17 @@ gpu_mode_ret:
         addeq zil, r0
         bleq display_latch
 
-        /* Update STAT and LY with zil */
+        /* Update STAT LY=LYC flag */
+        and r0, r2, $0xFF00
+        cmp r0, r2, lsr $0x10
+        orreq r2, $0x04
+        bicne r2, $0x04
+
+        /* Write new STAT and LY */
         and r1, zil, $0x6000
-        orr r0, lr, r1, lsr $0x0D
+        bic r2, $0x03
+        orr r2, r1, lsr $0x0D
+        bic r0, r2, $0xFF000000
         bl mmu_wg
 
         /* Trigger interrupt on VBlank */

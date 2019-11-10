@@ -399,13 +399,6 @@ mmu_rg:
          */
         .global mmu_wg
 mmu_wg:
-        /* Update LYC comparison */
-        ldr r1, =lcdc
-        ldrb r1, [r1, $0x05]
-        cmp r1, r0, lsr $0x08
-        orreq r0, $0x04
-        bicne r0, $0x04
-
         ldr r1, =lcdc
         strb r0, [r1, $0x01]
         lsr r0, $0x08
@@ -470,6 +463,17 @@ mmu_rgm:
 mmu_rgs:
         ldr r1, =oam
         ldr r0, [r1, r0, lsl $0x02]
+        mov pc, lr
+
+        /*!
+         * \brief Read GPU STAT
+         */
+        .global mmu_rgc
+mmu_rgc:
+        ldr r0, =lcdc
+        ldrb r2, [r0, $0x01]
+        ldrb r0, [r0, $0x05]
+        orr r2, r0, lsl $0x18
         mov pc, lr
 
         /* MMU READ OPERATIONS */
@@ -596,9 +600,6 @@ ropMISC:
         cmp r1, $0x0014
         beq ropNR14
 
-        cmp r1, $0x0041
-        beq ropSTAT
-
         b ropMEM
 
         /*!
@@ -626,12 +627,6 @@ ropNR14:
         ldr r1, =mem
         ldrb r0, [r1, r0]
         orr r0, $0xBF
-        mov pc, lr
-
-ropSTAT:
-        ldr r1, =mem
-        ldrb r0, [r1, r0]
-        orr r0, $0x80
         mov pc, lr
 
         /* MMU WRITE OPERATIONS */
@@ -1004,7 +999,7 @@ wopSTAT:
 
         ldr r1, =lcdc
         ldrb r1, [r1, $0x01]
-        and r1, $0x07
+        and r1, $0x87
         orr r0, r1
 
         ldr r1, =lcdc
@@ -1036,8 +1031,19 @@ wopLCDC:
         @ Update STAT and LY for good measure
         lsr r0, zil, $0x07
         and r0, $(0xFF << 0x08)
+        ldrb r1, [r1, $0x01]
+        and r1, $0xFC
+        orr r0, r1
         and r1, zil, $0x6000
         orr r0, r1, lsr $0x0D
+
+        @ Update LYC comparison
+        ldr r1, =lcdc
+        ldrb r1, [r1, $0x05]
+        cmp r1, r0, lsr $0x08
+        orreq r0, $0x04
+        bicne r0, $0x04
+
         b mmu_wg
 
 wopNR52:
