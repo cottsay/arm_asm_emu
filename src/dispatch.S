@@ -85,7 +85,8 @@ gpu_ret:
 timer_ret:
 
         /* Check Input */
-        b input_step
+        ands r0, zil, $0x07
+        beq input_step
 input_ret:
 
         /* Check CPU */
