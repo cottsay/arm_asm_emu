@@ -11,7 +11,8 @@ INCDIR:=inc
 ASFLAGS+=-g --warn --fatal-warnings -I$(INCDIR)
 LDFLAGS+=--fatal-warnings
 
-OBJS=cpu dispatch gpu mmu stat terminal time timer
+BASE_OBJS=cpu dispatch gpu mmu stat terminal time timer
+OBJS=$(BASE_OBJS)
 
 ifdef NULL_GRAPHICS
 OBJS+=display_null screen_null
@@ -40,12 +41,17 @@ $(LIBDIR)/emu.a: $(foreach V,$(OBJS),$(OBJDIR)/$(V).o) | $(LIBDIR)
 $(BINDIR)/start: $(OBJDIR)/start.o $(LIBDIR)/emu.a | $(BINDIR)
 	$(LD) $(LDFLAGS) -o$@ $^
 
+$(BINDIR)/test_harness: $(OBJDIR)/test_harness.o $(foreach V,$(BASE_OBJS),$(OBJDIR)/$(V).o) $(OBJDIR)/input_null.o $(OBJDIR)/bitmap.o $(OBJDIR)/framebuffer.o $(OBJDIR)/crc32.o | $(BINDIR)
+	$(LD) $(LDFLAGS) -o$@ $^
+
 $(OBJDIR):
 	mkdir $(OBJDIR)
 $(LIBDIR):
 	mkdir $(LIBDIR)
 $(BINDIR):
 	mkdir $(BINDIR)
+
+test: $(BINDIR)/test_harness
 
 clean:
 	rm -rf $(OBJDIR) $(LIBDIR) $(BINDIR)
