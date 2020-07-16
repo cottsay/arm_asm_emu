@@ -30,6 +30,9 @@ ifdef EMBED_BIOS
 ASFLAGS+=--defsym EMBED_BIOS=1
 endif
 
+TEST_HARNESS:=$(BINDIR)/test_harness
+TEST_TARGETS:=
+
 all: $(LIBDIR)/emu.a $(BINDIR)/start
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.S | $(OBJDIR)
@@ -51,7 +54,8 @@ $(LIBDIR):
 $(BINDIR):
 	mkdir $(BINDIR)
 
-test: $(BINDIR)/test_harness
+include test_targets.mak
+test: $(TEST_TARGETS)
 
 clean:
 	rm -rf $(OBJDIR) $(LIBDIR) $(BINDIR)
