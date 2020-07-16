@@ -54,7 +54,7 @@ ttydev: .asciz "/dev/null"
 
         .global serial_init
 serial_init:
-        str r7, [sp, $-0x04]
+        str r7, [sp, $-0x04]!
 
         /* Open the device */
         ldr r0, =ttydev
