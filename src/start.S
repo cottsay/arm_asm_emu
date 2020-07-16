@@ -62,16 +62,18 @@ _start:
         /* Look for CLA */
         ldr r0, [sp]
         cmp r0, $1
-        ble dispatch_run
+        ble start_no_load
         ldr r0, [sp, $8]
         bl mmu_load
         cmp r0, $0
         bne dispatch_exit
 
-        stmfd sp!, {r2, r7}
+start_no_load:
         mov r0, $0x00
         ldr r1, =dbgflg
         str r0, [r1]
+
+        stmfd sp!, {r2, r7}
 
         /* Register for SIGUSR1 */
         mov r0, $0x0A
@@ -90,6 +92,7 @@ _start:
         svc $0
         cmp r0, $0x00
         bne dispatch_exit
+
         ldmfd sp!, {r2, r7}
 
 dispatch_run:
