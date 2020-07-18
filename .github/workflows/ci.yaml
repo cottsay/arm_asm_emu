@@ -1,0 +1,33 @@
+name: arm_asm_emu CI
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: 0 0 1 * *
+
+jobs:
+  build_and_test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install -y binutils-arm-none-eabi qemu-user
+      - name: Clone project
+        uses: actions/checkout@v2
+      - name: Clone Blargg test ROMs
+        uses: actions/checkout@v2
+        with:
+          repository: retrio/gb-test-roms
+          path: gb-test-roms
+      - name: Build project
+        run: make -j2 all CROSS=arm-none-eabi-
+      - name: Test project
+        id: test-project
+        run: make -j2 test -k CROSS=arm-none-eabi- TEST_WRAPPER=qemu-arm GB_TEST_ROMS_PATH=gb-test-roms
+      - name: Upload test failures
+        if: failure() && steps.test-project.outcome == 'failure'
+        uses: actions/upload-artifact@v2-preview
+        with:
+          name: arm_asm_emu_failures
+          path: test_*.bmp
